@@ -1,52 +1,81 @@
 import React from 'react';
-import { Box, Image, Badge, Text, Heading, Stack, useColorModeValue } from "@chakra-ui/react";
+import { Box, Image, Badge, Text, Heading, Flex, Button, useColorModeValue } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
-function ArticleCard({ article }) {
+function ArticleCard({ article, onSave }) {
+    const bgColor = useColorModeValue('white', 'gray.800');
+    const textColor = useColorModeValue('gray.700', 'gray.100');
+    const descriptionColor = useColorModeValue('gray.600', 'gray.300');
+
     return (
         <MotionBox
-            maxW="sm"
             borderWidth="1px"
             borderRadius="lg"
             overflow="hidden"
-            boxShadow="lg"
-            bg={useColorModeValue('white', 'gray.800')}
-            whileHover={{ scale: 1.03 }}
+            boxShadow="md"
+            bg={bgColor}
+            whileHover={{ y: -5 }}
             transition={{ duration: 0.3 }}
         >
-            <Image src={article.imageUrl} alt={article.title} h="200px" w="100%" objectFit="cover" />
+            <Image
+                src={article.imageUrl}
+                alt={article.title}
+                h="250px"
+                w="100%"
+                objectFit="cover"
+            />
 
             <Box p="6">
-                <Stack direction="row" align="baseline">
+                <Flex justifyContent="space-between" alignItems="center" mb={4}>
                     <Badge borderRadius="full" px="2" colorScheme="teal">
                         {article.category}
                     </Badge>
-                    <Text
-                        color={useColorModeValue('gray.500', 'gray.400')}
-                        fontWeight="semibold"
-                        letterSpacing="wide"
-                        fontSize="xs"
-                        textTransform="uppercase"
+                    <Button
+                        size="sm"
+                        colorScheme={article.isSaved ? "green" : "blue"}
+                        onClick={() => onSave(article.id)}
                     >
-                        {article.source} &bull; {new Date(article.publishedAt).toLocaleDateString()}
-                    </Text>
-                </Stack>
+                        {article.isSaved ? "Saved" : "Save"}
+                    </Button>
+                </Flex>
 
                 <Heading
-                    mt={2}
                     fontSize="xl"
                     fontWeight="semibold"
-                    lineHeight="short"
-                    isTruncated
+                    lineHeight="tight"
+                    noOfLines={2}
+                    color={textColor}
+                    mb={2}
                 >
                     {article.title}
                 </Heading>
 
-                <Text mt={2} color={useColorModeValue('gray.600', 'gray.300')} fontSize="sm">
+                <Text
+                    color={descriptionColor}
+                    fontSize="md"
+                    noOfLines={3}
+                    mb={4}
+                >
                     {article.description}
                 </Text>
+
+                <Flex justifyContent="space-between" alignItems="center">
+                    <Text
+                        color={useColorModeValue('gray.500', 'gray.400')}
+                        fontWeight="medium"
+                        fontSize="sm"
+                    >
+                        {article.source}
+                    </Text>
+                    <Text
+                        color={useColorModeValue('gray.500', 'gray.400')}
+                        fontSize="sm"
+                    >
+                        {new Date(article.publishedAt).toLocaleDateString()}
+                    </Text>
+                </Flex>
             </Box>
         </MotionBox>
     );

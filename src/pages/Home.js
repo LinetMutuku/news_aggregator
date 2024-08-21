@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Heading, VStack, Spinner, useToast } from "@chakra-ui/react";
 import ArticleGrid from '../components/ArticleGrid';
-import { getRecommendedArticles } from '../utils/api';
+import { getRecommendedArticles, saveArticle } from '../utils/api';
 import { useInView } from 'react-intersection-observer';
 
 function Home() {
@@ -47,11 +47,38 @@ function Home() {
         }
     }, [inView, loadArticles]);
 
+    const handleSaveArticle = async (articleId) => {
+        try {
+            await saveArticle(articleId);
+            toast({
+                title: "Article saved",
+                status: "success",
+                duration: 2000,
+                isClosable: true,
+            });
+            // Optionally, update the local state to reflect the saved status
+            setArticles(prevArticles =>
+                prevArticles.map(article =>
+                    article.id === articleId ? { ...article, isSaved: true } : article
+                )
+            );
+        } catch (error) {
+            console.error('Error saving article:', error);
+            toast({
+                title: "Error saving article",
+                description: error.message || "An unexpected error occurred",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+    };
+
     return (
         <Box w="full">
             <VStack spacing={8} align="stretch">
                 <Heading textAlign="center">Latest News</Heading>
-                <ArticleGrid articles={articles} />
+                <ArticleGrid articles={articles} onSave={handleSaveArticle} />
                 {loading && (
                     <Box textAlign="center">
                         <Spinner size="xl" />

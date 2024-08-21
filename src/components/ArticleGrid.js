@@ -2,11 +2,15 @@ import React from 'react';
 import { SimpleGrid } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 
-function ArticleGrid({ articles }) {
+function ArticleGrid({ articles, onSave }) {
     return (
-        <SimpleGrid columns={[1, null, 3]} spacing="40px">
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
             {articles.map(article => (
-                <ArticleCard key={article._id} article={article} />
+                <ArticleCard
+                    key={article.id}
+                    article={article}
+                    onSave={onSave}
+                />
             ))}
         </SimpleGrid>
     );
