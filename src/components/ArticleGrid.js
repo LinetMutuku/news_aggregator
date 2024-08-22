@@ -1,19 +1,23 @@
 import React from 'react';
-import { SimpleGrid } from "@chakra-ui/react";
+import { SimpleGrid, Container, VStack } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 
-function ArticleGrid({ articles, onSave }) {
+const ArticleGrid = ({ articles, onSave }) => {
     return (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
-            {articles.map(article => (
-                <ArticleCard
-                    key={article.id}
-                    article={article}
-                    onSave={onSave}
-                />
-            ))}
-        </SimpleGrid>
+        <Container maxW="container.xl" py={16}>
+            <VStack spacing={16} align="stretch">
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={12}>
+                    {articles.map(article => (
+                        <ArticleCard
+                            key={article._id || article.id}
+                            article={article}
+                            onSave={onSave}
+                        />
+                    ))}
+                </SimpleGrid>
+            </VStack>
+        </Container>
     );
-}
+};
 
 export default ArticleGrid;

@@ -48,6 +48,18 @@ function Home() {
     }, [inView, loadArticles]);
 
     const handleSaveArticle = async (articleId) => {
+        if (!articleId) {
+            console.error('Article ID is undefined');
+            toast({
+                title: "Error saving article",
+                description: "Article ID is missing",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
         try {
             await saveArticle(articleId);
             toast({
@@ -56,10 +68,12 @@ function Home() {
                 duration: 2000,
                 isClosable: true,
             });
-            // Optionally, update the local state to reflect the saved status
+            // Update the local state to reflect the saved status
             setArticles(prevArticles =>
                 prevArticles.map(article =>
-                    article.id === articleId ? { ...article, isSaved: true } : article
+                    (article._id === articleId || article.id === articleId)
+                        ? { ...article, isSaved: true }
+                        : article
                 )
             );
         } catch (error) {

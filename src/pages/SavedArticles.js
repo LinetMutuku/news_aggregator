@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Heading, VStack, Text, useToast, Spinner, Alert, AlertIcon } from "@chakra-ui/react";
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+    Box, Heading, VStack, Text, useToast, Spinner, Alert, AlertIcon,
+    AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
+    AlertDialogContent, AlertDialogOverlay, Button
+} from "@chakra-ui/react";
 import ArticleGrid from '../components/ArticleGrid';
 import { getSavedArticles, unsaveArticle } from '../utils/api';
 
@@ -7,9 +11,12 @@ function SavedArticles() {
     const [savedArticles, setSavedArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [articleToDelete, setArticleToDelete] = useState(null);
     const toast = useToast();
+    const cancelRef = React.useRef();
 
-    const loadSavedArticles = async () => {
+    const loadSavedArticles = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -28,32 +35,46 @@ function SavedArticles() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
     useEffect(() => {
         loadSavedArticles();
-    }, );
+    }, [loadSavedArticles]);
 
-    const handleUnsaveArticle = async (articleId) => {
-        try {
-            await unsaveArticle(articleId);
-            toast({
-                title: "Article unsaved",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-            loadSavedArticles(); // Reload the saved articles
-        } catch (error) {
-            console.error('Error unsaving article:', error);
-            toast({
-                title: "Error unsaving article",
-                description: error.response?.data?.message || "An unexpected error occurred",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
+    const handleDeleteClick = (article) => {
+        setArticleToDelete(article);
+        setIsOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (articleToDelete) {
+            try {
+                await unsaveArticle(articleToDelete.id);
+                setSavedArticles(prevArticles =>
+                    prevArticles.filter(article => article.id !== articleToDelete.id)
+                );
+                toast({
+                    title: "Article deleted",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            } catch (error) {
+                console.error('Error deleting article:', error);
+                toast({
+                    title: "Error deleting article",
+                    description: error.response?.data?.message || "An unexpected error occurred",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
         }
+        setIsOpen(false);
+    };
+
+    const handleDeleteCancel = () => {
+        setIsOpen(false);
     };
 
     if (loading) {
@@ -81,12 +102,39 @@ function SavedArticles() {
                 {savedArticles.length > 0 ? (
                     <ArticleGrid
                         articles={savedArticles}
-                        onUnsave={handleUnsaveArticle}
+                        onDelete={handleDeleteClick}
                     />
                 ) : (
                     <Text textAlign="center">You haven't saved any articles yet.</Text>
                 )}
             </VStack>
+
+            <AlertDialog
+                isOpen={isOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={handleDeleteCancel}
+            >
+                <AlertDialogOverlay>
+                    <AlertDialogContent>
+                        <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                            Delete Article
+                        </AlertDialogHeader>
+
+                        <AlertDialogBody>
+                            Are you sure you want to delete this article? This action cannot be undone.
+                        </AlertDialogBody>
+
+                        <AlertDialogFooter>
+                            <Button ref={cancelRef} onClick={handleDeleteCancel}>
+                                Cancel
+                            </Button>
+                            <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3}>
+                                Delete
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
         </Box>
     );
 }
