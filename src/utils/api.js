@@ -149,13 +149,16 @@ export const getSavedArticles = async () => {
 
 export const saveArticle = async (article) => {
     try {
+        console.log('Attempting to save article:', article);
         const response = await api.post('/users/save-article', article);
+        console.log('Save article response:', response.data);
         return response.data;
     } catch (error) {
-        console.error('Save Article Error:', error);
+        console.error('Save Article Error:', error.response ? error.response.data : error.message);
         throw error;
     }
 };
+
 export const unsaveArticle = async (articleId) => {
     try {
         const response = await api.delete(`/users/saved-article/${articleId}`);

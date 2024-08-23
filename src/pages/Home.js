@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Heading, VStack, Spinner, useToast } from "@chakra-ui/react";
+import { Box, VStack, Heading, Spinner, useToast } from "@chakra-ui/react";
 import ArticleGrid from '../components/ArticleGrid';
 import { getRecommendedArticles, saveArticle } from '../utils/api';
 import { useInView } from 'react-intersection-observer';
@@ -47,33 +47,28 @@ function Home() {
         }
     }, [inView, loadArticles]);
 
-    const handleSaveArticle = async (articleId) => {
-        if (!articleId) {
-            console.error('Article ID is undefined');
-            toast({
-                title: "Error saving article",
-                description: "Article ID is missing",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-            return;
-        }
-
+    const handleSaveArticle = async (article) => {
         try {
-            await saveArticle(articleId);
+            console.log('Saving article:', article);
+            const savedArticle = await saveArticle({
+                articleId: article.id,
+                title: article.title,
+                description: article.description,
+                imageUrl: article.urlToImage,
+                publishedAt: article.publishedAt,
+                source: article.source.name,
+                category: article.category || 'Uncategorized'
+            });
+            console.log('Article saved successfully:', savedArticle);
             toast({
                 title: "Article saved",
                 status: "success",
                 duration: 2000,
                 isClosable: true,
             });
-            // Update the local state to reflect the saved status
             setArticles(prevArticles =>
-                prevArticles.map(article =>
-                    (article._id === articleId || article.id === articleId)
-                        ? { ...article, isSaved: true }
-                        : article
+                prevArticles.map(a =>
+                    a.id === article.id ? { ...a, isSaved: true } : a
                 )
             );
         } catch (error) {
@@ -92,7 +87,11 @@ function Home() {
         <Box w="full">
             <VStack spacing={8} align="stretch">
                 <Heading textAlign="center">Latest News</Heading>
-                <ArticleGrid articles={articles} onSave={handleSaveArticle} />
+                <ArticleGrid
+                    articles={articles}
+                    onSave={handleSaveArticle}
+                    showDeleteButton={false}
+                />
                 {loading && (
                     <Box textAlign="center">
                         <Spinner size="xl" />

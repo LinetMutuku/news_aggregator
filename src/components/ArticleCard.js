@@ -4,10 +4,18 @@ import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
-const ArticleCard = ({ article, onDelete }) => {
+const ArticleCard = ({ article, onSave, onDelete, showDeleteButton }) => {
     const bgColor = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.700', 'gray.100');
     const descriptionColor = useColorModeValue('gray.600', 'gray.300');
+
+    const handleAction = () => {
+        if (showDeleteButton) {
+            onDelete(article);
+        } else {
+            onSave(article);
+        }
+    };
 
     return (
         <AspectRatio ratio={1}>
@@ -36,10 +44,10 @@ const ArticleCard = ({ article, onDelete }) => {
                         </Badge>
                         <Button
                             size="sm"
-                            colorScheme="red"
-                            onClick={() => onDelete(article)}
+                            colorScheme={showDeleteButton ? "red" : (article.isSaved ? "green" : "blue")}
+                            onClick={handleAction}
                         >
-                            Delete
+                            {showDeleteButton ? "Unsave" : (article.isSaved ? "Saved" : "Save")}
                         </Button>
                     </Flex>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Box, Heading, VStack, Text, useToast, Spinner, Alert, AlertIcon,
+    Box, VStack, Heading, Text, useToast, Spinner, Alert, AlertIcon,
     AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
     AlertDialogContent, AlertDialogOverlay, Button
 } from "@chakra-ui/react";
@@ -54,15 +54,15 @@ function SavedArticles() {
                     prevArticles.filter(article => article.id !== articleToDelete.id)
                 );
                 toast({
-                    title: "Article deleted",
+                    title: "Article unsaved",
                     status: "success",
                     duration: 3000,
                     isClosable: true,
                 });
             } catch (error) {
-                console.error('Error deleting article:', error);
+                console.error('Error unsaving article:', error);
                 toast({
-                    title: "Error deleting article",
+                    title: "Error unsaving article",
                     description: error.response?.data?.message || "An unexpected error occurred",
                     status: "error",
                     duration: 5000,
@@ -103,6 +103,7 @@ function SavedArticles() {
                     <ArticleGrid
                         articles={savedArticles}
                         onDelete={handleDeleteClick}
+                        showDeleteButton={true}
                     />
                 ) : (
                     <Text textAlign="center">You haven't saved any articles yet.</Text>
@@ -117,11 +118,11 @@ function SavedArticles() {
                 <AlertDialogOverlay>
                     <AlertDialogContent>
                         <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                            Delete Article
+                            Unsave Article
                         </AlertDialogHeader>
 
                         <AlertDialogBody>
-                            Are you sure you want to delete this article? This action cannot be undone.
+                            Are you sure you want to unsave this article? This action cannot be undone.
                         </AlertDialogBody>
 
                         <AlertDialogFooter>
@@ -129,7 +130,7 @@ function SavedArticles() {
                                 Cancel
                             </Button>
                             <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3}>
-                                Delete
+                                Unsave
                             </Button>
                         </AlertDialogFooter>
                     </AlertDialogContent>

@@ -2,7 +2,7 @@ import React from 'react';
 import { SimpleGrid, Container, VStack } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 
-const ArticleGrid = ({ articles, onSave }) => {
+const ArticleGrid = ({ articles, onSave, onDelete, showDeleteButton }) => {
     return (
         <Container maxW="container.xl" py={16}>
             <VStack spacing={16} align="stretch">
@@ -12,6 +12,8 @@ const ArticleGrid = ({ articles, onSave }) => {
                             key={article._id || article.id}
                             article={article}
                             onSave={onSave}
+                            onDelete={onDelete}
+                            showDeleteButton={showDeleteButton}
                         />
                     ))}
                 </SimpleGrid>
