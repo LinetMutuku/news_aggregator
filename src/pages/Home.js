@@ -51,31 +51,32 @@ function Home() {
         try {
             console.log('Saving article:', article);
             const savedArticle = await saveArticle({
-                articleId: article.id,
+                articleId: article._id,
                 title: article.title,
                 description: article.description,
                 imageUrl: article.urlToImage,
                 publishedAt: article.publishedAt,
                 source: article.source.name,
-                category: article.category || 'Uncategorized'
+                category: article.category || 'Uncategorized',
+                url: article.url
             });
             console.log('Article saved successfully:', savedArticle);
             toast({
-                title: "Article saved",
+                title: "Article saved successfully",
                 status: "success",
                 duration: 2000,
                 isClosable: true,
             });
             setArticles(prevArticles =>
                 prevArticles.map(a =>
-                    a.id === article.id ? { ...a, isSaved: true } : a
+                    a._id === article._id ? { ...a, isSaved: true } : a
                 )
             );
         } catch (error) {
             console.error('Error saving article:', error);
             toast({
                 title: "Error saving article",
-                description: error.message || "An unexpected error occurred",
+                description: error.response?.data?.error || error.message || "An unexpected error occurred",
                 status: "error",
                 duration: 3000,
                 isClosable: true,

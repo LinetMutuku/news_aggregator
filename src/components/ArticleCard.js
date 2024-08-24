@@ -17,6 +17,13 @@ const ArticleCard = ({ article, onSave, onDelete, showDeleteButton }) => {
         }
     };
 
+    const handleImageError = (e) => {
+        e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+    };
+
+    const imageUrl = article.urlToImage || article.imageUrl;
+    const sourceName = article.source?.name || article.source;
+
     return (
         <AspectRatio ratio={1}>
             <MotionBox
@@ -31,10 +38,11 @@ const ArticleCard = ({ article, onSave, onDelete, showDeleteButton }) => {
                 flexDirection="column"
             >
                 <Image
-                    src={article.imageUrl}
+                    src={imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}
                     alt={article.title}
                     objectFit="cover"
                     flex="1"
+                    onError={handleImageError}
                 />
 
                 <Box p={4} flex="1" display="flex" flexDirection="column">
@@ -78,7 +86,7 @@ const ArticleCard = ({ article, onSave, onDelete, showDeleteButton }) => {
                             color={useColorModeValue('gray.500', 'gray.400')}
                             fontWeight="medium"
                         >
-                            {article.source}
+                            {sourceName}
                         </Text>
                         <Text
                             color={useColorModeValue('gray.500', 'gray.400')}

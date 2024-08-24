@@ -21,7 +21,18 @@ function SavedArticles() {
             setLoading(true);
             setError(null);
             const articles = await getSavedArticles();
-            setSavedArticles(articles || []);
+            const transformedArticles = articles.map(article => ({
+                _id: article.articleId,
+                title: article.title,
+                description: article.description,
+                urlToImage: article.imageUrl,
+                publishedAt: article.publishedAt,
+                source: { name: article.source },
+                category: article.category,
+                url: article.url,
+                isSaved: true
+            }));
+            setSavedArticles(transformedArticles);
         } catch (error) {
             console.error('Error fetching saved articles:', error);
             setError('Failed to fetch saved articles. Please try again later.');
@@ -49,9 +60,9 @@ function SavedArticles() {
     const handleDeleteConfirm = async () => {
         if (articleToDelete) {
             try {
-                await unsaveArticle(articleToDelete.id);
+                await unsaveArticle(articleToDelete._id);
                 setSavedArticles(prevArticles =>
-                    prevArticles.filter(article => article.id !== articleToDelete.id)
+                    prevArticles.filter(article => article._id !== articleToDelete._id)
                 );
                 toast({
                     title: "Article unsaved",
@@ -63,7 +74,7 @@ function SavedArticles() {
                 console.error('Error unsaving article:', error);
                 toast({
                     title: "Error unsaving article",
-                    description: error.response?.data?.message || "An unexpected error occurred",
+                    description: "An unexpected error occurred. Please try again.",
                     status: "error",
                     duration: 5000,
                     isClosable: true,

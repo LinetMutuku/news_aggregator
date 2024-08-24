@@ -139,7 +139,9 @@ export const updateUserPreferences = async (preferences) => {
 // Saved Articles
 export const getSavedArticles = async () => {
     try {
+        console.log('Fetching saved articles');
         const response = await api.get('/users/saved-articles');
+        console.log('Get saved articles response:', response.data);
         return response.data;
     } catch (error) {
         console.error('Get Saved Articles Error:', error);
@@ -154,17 +156,28 @@ export const saveArticle = async (article) => {
         console.log('Save article response:', response.data);
         return response.data;
     } catch (error) {
-        console.error('Save Article Error:', error.response ? error.response.data : error.message);
+        console.error('Save Article Error:', error);
         throw error;
     }
 };
 
 export const unsaveArticle = async (articleId) => {
     try {
+        console.log(`Attempting to unsave article with ID: ${articleId}`);
         const response = await api.delete(`/users/saved-article/${articleId}`);
+        console.log('Unsave article response:', response.data);
         return response.data;
     } catch (error) {
         console.error('Unsave Article Error:', error);
+        if (error.response) {
+            console.error('Response Error Data:', error.response.data);
+            console.error('Response Error Status:', error.response.status);
+            console.error('Response Error Headers:', error.response.headers);
+        } else if (error.request) {
+            console.error('Request Error:', error.request);
+        } else {
+            console.error('Error Message:', error.message);
+        }
         throw error;
     }
 };
