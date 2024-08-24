@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Flex, Heading, Button, useColorMode, IconButton, Stack, useDisclosure } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { HamburgerIcon, CloseIcon, MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { FaEquals } from 'react-icons/fa';
+import UserDashboard from './userDashboard';
 
 function Header() {
     const { colorMode, toggleColorMode } = useColorMode();
     const { isOpen, onToggle } = useDisclosure();
+    const [isDashboardVisible, setIsDashboardVisible] = useState(false);
+
+    const toggleDashboard = () => {
+        setIsDashboardVisible(prev => !prev);
+    };
 
     return (
         <Box>
@@ -46,6 +53,12 @@ function Header() {
                     <Button as={Link} to="/settings" variant="ghost">Settings</Button>
                     <Button as={Link} to="/" variant="solid">Login</Button>
                     <IconButton
+                        icon={<FaEquals />}
+                        onClick={toggleDashboard}
+                        variant="ghost"
+                        aria-label="Toggle Dashboard"
+                    />
+                    <IconButton
                         icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
                         onClick={toggleColorMode}
                         variant="ghost"
@@ -63,6 +76,12 @@ function Header() {
                     </Stack>
                 </Box>
             ) : null}
+
+            {isDashboardVisible && (
+                <Box position="absolute" top="60px" left="0" right="0" zIndex="1000">
+                    <UserDashboard />
+                </Box>
+            )}
         </Box>
     );
 }

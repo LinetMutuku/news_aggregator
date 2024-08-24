@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, VStack, Heading, Spinner, useToast } from "@chakra-ui/react";
+import { Box, VStack, Heading, Spinner, useToast, Collapse } from "@chakra-ui/react";
 import ArticleGrid from '../components/ArticleGrid';
+import UserDashboard from '../components/userDashboard';
 import { getRecommendedArticles, saveArticle } from '../utils/api';
 import { useInView } from 'react-intersection-observer';
 
-function Home() {
+function Home({ isDashboardVisible }) {
     const [articles, setArticles] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -50,7 +51,6 @@ function Home() {
     const handleSaveArticle = async (article) => {
         try {
             console.log('Saving article:', article);
-            // Save the entire article object
             const savedArticle = await saveArticle(article);
             console.log('Article saved successfully:', savedArticle);
             toast({
@@ -79,6 +79,9 @@ function Home() {
     return (
         <Box w="full">
             <VStack spacing={8} align="stretch">
+                <Collapse in={isDashboardVisible} animateOpacity>
+                    <UserDashboard />
+                </Collapse>
                 <Heading textAlign="center">Latest News</Heading>
                 <ArticleGrid
                     articles={articles}
