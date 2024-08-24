@@ -21,18 +21,7 @@ function SavedArticles() {
             setLoading(true);
             setError(null);
             const articles = await getSavedArticles();
-            const transformedArticles = articles.map(article => ({
-                _id: article.articleId,
-                title: article.title,
-                description: article.description,
-                urlToImage: article.imageUrl,
-                publishedAt: article.publishedAt,
-                source: { name: article.source },
-                category: article.category,
-                url: article.url,
-                isSaved: true
-            }));
-            setSavedArticles(transformedArticles);
+            setSavedArticles(articles || []);
         } catch (error) {
             console.error('Error fetching saved articles:', error);
             setError('Failed to fetch saved articles. Please try again later.');
@@ -60,9 +49,9 @@ function SavedArticles() {
     const handleDeleteConfirm = async () => {
         if (articleToDelete) {
             try {
-                await unsaveArticle(articleToDelete._id);
+                await unsaveArticle(articleToDelete.articleId);
                 setSavedArticles(prevArticles =>
-                    prevArticles.filter(article => article._id !== articleToDelete._id)
+                    prevArticles.filter(article => article.articleId !== articleToDelete.articleId)
                 );
                 toast({
                     title: "Article unsaved",
@@ -72,13 +61,26 @@ function SavedArticles() {
                 });
             } catch (error) {
                 console.error('Error unsaving article:', error);
-                toast({
-                    title: "Error unsaving article",
-                    description: "An unexpected error occurred. Please try again.",
-                    status: "error",
-                    duration: 5000,
-                    isClosable: true,
-                });
+                if (error.response && error.response.status === 404) {
+                    toast({
+                        title: "Article already unsaved",
+                        description: "This article has already been removed from your saved list.",
+                        status: "info",
+                        duration: 5000,
+                        isClosable: true,
+                    });
+                    setSavedArticles(prevArticles =>
+                        prevArticles.filter(article => article.articleId !== articleToDelete.articleId)
+                    );
+                } else {
+                    toast({
+                        title: "Error unsaving article",
+                        description: "An unexpected error occurred. Please try again.",
+                        status: "error",
+                        duration: 5000,
+                        isClosable: true,
+                    });
+                }
             }
         }
         setIsOpen(false);

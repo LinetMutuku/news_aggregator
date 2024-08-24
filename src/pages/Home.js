@@ -50,16 +50,8 @@ function Home() {
     const handleSaveArticle = async (article) => {
         try {
             console.log('Saving article:', article);
-            const savedArticle = await saveArticle({
-                articleId: article._id,
-                title: article.title,
-                description: article.description,
-                imageUrl: article.urlToImage,
-                publishedAt: article.publishedAt,
-                source: article.source.name,
-                category: article.category || 'Uncategorized',
-                url: article.url
-            });
+            // Save the entire article object
+            const savedArticle = await saveArticle(article);
             console.log('Article saved successfully:', savedArticle);
             toast({
                 title: "Article saved successfully",

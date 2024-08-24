@@ -152,6 +152,7 @@ export const getSavedArticles = async () => {
 export const saveArticle = async (article) => {
     try {
         console.log('Attempting to save article:', article);
+        // Send the entire article object to be saved
         const response = await api.post('/users/save-article', article);
         console.log('Save article response:', response.data);
         return response.data;

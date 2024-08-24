@@ -17,10 +17,7 @@ const ArticleCard = ({ article, onSave, onDelete, showDeleteButton }) => {
         }
     };
 
-    const handleImageError = (e) => {
-        e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
-    };
-
+    // Use the correct image URL field based on the article structure
     const imageUrl = article.urlToImage || article.imageUrl;
     const sourceName = article.source?.name || article.source;
 
@@ -38,11 +35,10 @@ const ArticleCard = ({ article, onSave, onDelete, showDeleteButton }) => {
                 flexDirection="column"
             >
                 <Image
-                    src={imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}
+                    src={imageUrl}
                     alt={article.title}
                     objectFit="cover"
                     flex="1"
-                    onError={handleImageError}
                 />
 
                 <Box p={4} flex="1" display="flex" flexDirection="column">
