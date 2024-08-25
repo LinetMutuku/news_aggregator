@@ -39,9 +39,7 @@ api.interceptors.response.use((response) => {
 // Authentication
 export const login = async (username, password) => {
     try {
-        console.log('Attempting login with username:', username);
         const response = await api.post('/auth/login', { username, password });
-        console.log('Login response:', response.data);
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
         }
@@ -54,9 +52,7 @@ export const login = async (username, password) => {
 
 export const register = async (username, email, password) => {
     try {
-        console.log('Attempting registration with username:', username);
         const response = await api.post('/auth/register', { username, email, password });
-        console.log('Registration response:', response.data);
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
         }
@@ -69,7 +65,6 @@ export const register = async (username, email, password) => {
 
 export const logout = () => {
     localStorage.removeItem('token');
-    console.log('User logged out');
 };
 
 // Articles
@@ -139,9 +134,7 @@ export const updateUserPreferences = async (preferences) => {
 // Saved Articles
 export const getSavedArticles = async () => {
     try {
-        console.log('Fetching saved articles');
         const response = await api.get('/users/saved-articles');
-        console.log('Get saved articles response:', response.data);
         return response.data;
     } catch (error) {
         console.error('Get Saved Articles Error:', error);
@@ -151,14 +144,12 @@ export const getSavedArticles = async () => {
 
 export const saveArticle = async (article) => {
     try {
-        console.log('Attempting to save article:', article);
         const articleToSave = {
             ...article,
-            articleId: article._id,  // Use _id as articleId
+            articleId: article._id,
             source: typeof article.source === 'object' ? article.source.name : article.source
         };
         const response = await api.post('/users/save-article', articleToSave);
-        console.log('Save article response:', response.data);
         return response.data;
     } catch (error) {
         console.error('Save Article Error:', error);
@@ -168,21 +159,10 @@ export const saveArticle = async (article) => {
 
 export const unsaveArticle = async (articleId) => {
     try {
-        console.log(`Attempting to unsave article with ID: ${articleId}`);
         const response = await api.delete(`/users/saved-article/${articleId}`);
-        console.log('Unsave article response:', response.data);
         return response.data;
     } catch (error) {
         console.error('Unsave Article Error:', error);
-        if (error.response) {
-            console.error('Response Error Data:', error.response.data);
-            console.error('Response Error Status:', error.response.status);
-            console.error('Response Error Headers:', error.response.headers);
-        } else if (error.request) {
-            console.error('Request Error:', error.request);
-        } else {
-            console.error('Error Message:', error.message);
-        }
         throw error;
     }
 };

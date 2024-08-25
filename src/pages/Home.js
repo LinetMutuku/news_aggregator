@@ -1,20 +1,41 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, VStack, Heading, Spinner, useToast, Collapse } from "@chakra-ui/react";
+import {
+    Box,
+    VStack,
+    Heading,
+    Spinner,
+    useToast,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalBody,
+    ModalCloseButton,
+    Container,
+    Text,
+    Fade,
+    useColorModeValue
+} from "@chakra-ui/react";
 import ArticleGrid from '../components/ArticleGrid';
-import UserDashboard from '../components/userDashboard';
-import { getRecommendedArticles, saveArticle } from '../utils/api';
+import ArticleDetail from '../components/ArticleDetail';
+import { getRecommendedArticles, saveArticle, getArticleById } from '../utils/api';
 import { useInView } from 'react-intersection-observer';
 
-function Home({ isDashboardVisible }) {
+function Home() {
     const [articles, setArticles] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [selectedArticle, setSelectedArticle] = useState(null);
+    const [isReadModalOpen, setIsReadModalOpen] = useState(false);
     const toast = useToast();
 
     const { ref, inView } = useInView({
         threshold: 0,
     });
+
+    const bgColor = useColorModeValue('gray.50', 'gray.900');
+    const textColor = useColorModeValue('gray.800', 'gray.100');
+    const headingColor = useColorModeValue('blue.600', 'blue.300');
 
     const loadArticles = useCallback(async () => {
         if (loading || !hasMore) return;
@@ -50,9 +71,7 @@ function Home({ isDashboardVisible }) {
 
     const handleSaveArticle = async (article) => {
         try {
-            console.log('Saving article:', article);
-            const savedArticle = await saveArticle(article);
-            console.log('Article saved successfully:', savedArticle);
+            await saveArticle(article);
             toast({
                 title: "Article saved successfully",
                 status: "success",
@@ -76,25 +95,64 @@ function Home({ isDashboardVisible }) {
         }
     };
 
+    const handleReadArticle = async (article) => {
+        try {
+            setLoading(true);
+            const fullArticle = await getArticleById(article._id);
+            setSelectedArticle(fullArticle);
+            setIsReadModalOpen(true);
+        } catch (error) {
+            console.error('Error fetching full article:', error);
+            toast({
+                title: "Error fetching article",
+                description: "Unable to load the full article. Please try again.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <Box w="full">
-            <VStack spacing={8} align="stretch">
-                <Collapse in={isDashboardVisible} animateOpacity>
-                    <UserDashboard />
-                </Collapse>
-                <Heading textAlign="center">Latest News</Heading>
-                <ArticleGrid
-                    articles={articles}
-                    onSave={handleSaveArticle}
-                    showDeleteButton={false}
-                />
-                {loading && (
-                    <Box textAlign="center">
-                        <Spinner size="xl" />
-                    </Box>
-                )}
-                <Box ref={ref} h="20px" />
-            </VStack>
+        <Box w="full" bg={bgColor} minH="100vh" py={8}>
+            <Container maxW="container.xl">
+                <VStack spacing={8} align="stretch">
+                    <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
+                        Discover Today's Top Stories
+                    </Heading>
+                    <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
+                        Stay informed with the latest news and articles from around the world.
+                    </Text>
+                    <Fade in={true}>
+                        <ArticleGrid
+                            articles={articles}
+                            onSave={handleSaveArticle}
+                            onRead={handleReadArticle}
+                            showDeleteButton={false}
+                            saveButtonColor="blue.400"
+                        />
+                    </Fade>
+                    {loading && (
+                        <Box textAlign="center" py={8}>
+                            <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
+                            <Text mt={4} color={textColor}>Loading more stories...</Text>
+                        </Box>
+                    )}
+                    <Box ref={ref} h="20px" />
+                </VStack>
+            </Container>
+
+            <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
+                <ModalOverlay />
+                <ModalContent maxH="90vh" bg={bgColor}>
+                    <ModalCloseButton />
+                    <ModalBody p={0}>
+                        {selectedArticle && <ArticleDetail article={selectedArticle} />}
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }
