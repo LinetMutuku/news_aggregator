@@ -92,6 +92,9 @@ export const getAllArticles = async (page = 1, limit = 20, category = '', search
 
 export const getArticleById = async (id) => {
     try {
+        if (!id || typeof id !== 'string' || !/^[0-9a-fA-F]{24}$/.test(id)) {
+            throw new Error('Invalid article ID');
+        }
         const response = await api.get(`/articles/${id}`);
         return response.data;
     } catch (error) {
@@ -106,6 +109,19 @@ export const markArticleAsRead = async (articleId) => {
         return response.data;
     } catch (error) {
         console.error('Mark Article as Read Error:', error);
+        throw error;
+    }
+};
+
+// Search articles (using existing functionality)
+export const searchArticles = async (query, page = 1, limit = 20) => {
+    try {
+        const response = await api.get('/articles', {
+            params: { search: query, page, limit }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Search Articles Error:', error);
         throw error;
     }
 };
@@ -138,6 +154,19 @@ export const getSavedArticles = async () => {
         return response.data;
     } catch (error) {
         console.error('Get Saved Articles Error:', error);
+        throw error;
+    }
+};
+
+// Search saved articles (assuming this endpoint exists)
+export const searchSavedArticles = async (query) => {
+    try {
+        const response = await api.get('/users/saved-articles', {
+            params: { search: query }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Search Saved Articles Error:', error);
         throw error;
     }
 };

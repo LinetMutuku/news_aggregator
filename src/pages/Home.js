@@ -13,11 +13,16 @@ import {
     Container,
     Text,
     Fade,
-    useColorModeValue
+    useColorModeValue,
+    Input,
+    InputGroup,
+    InputLeftElement,
+    Button
 } from "@chakra-ui/react";
+import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
-import { getRecommendedArticles, saveArticle, getArticleById } from '../utils/api';
+import { getRecommendedArticles, saveArticle, getArticleById, searchArticles } from '../utils/api';
 import { useInView } from 'react-intersection-observer';
 
 function Home() {
@@ -27,6 +32,8 @@ function Home() {
     const [loading, setLoading] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [isReadModalOpen, setIsReadModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
     const toast = useToast();
 
     const { ref, inView } = useInView({
@@ -36,9 +43,10 @@ function Home() {
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
     const headingColor = useColorModeValue('blue.600', 'blue.300');
+    const inputBgColor = useColorModeValue('white', 'gray.700');
 
     const loadArticles = useCallback(async () => {
-        if (loading || !hasMore) return;
+        if (loading || !hasMore || isSearching) return;
         setLoading(true);
         try {
             const newArticles = await getRecommendedArticles(page);
@@ -61,13 +69,13 @@ function Home() {
         } finally {
             setLoading(false);
         }
-    }, [page, loading, hasMore, toast]);
+    }, [page, loading, hasMore, toast, isSearching]);
 
     useEffect(() => {
-        if (inView) {
+        if (inView && !isSearching) {
             loadArticles();
         }
-    }, [inView, loadArticles]);
+    }, [inView, loadArticles, isSearching]);
 
     const handleSaveArticle = async (article) => {
         try {
@@ -98,6 +106,9 @@ function Home() {
     const handleReadArticle = async (article) => {
         try {
             setLoading(true);
+            if (!article._id) {
+                throw new Error('Invalid article ID');
+            }
             const fullArticle = await getArticleById(article._id);
             setSelectedArticle(fullArticle);
             setIsReadModalOpen(true);
@@ -105,7 +116,7 @@ function Home() {
             console.error('Error fetching full article:', error);
             toast({
                 title: "Error fetching article",
-                description: "Unable to load the full article. Please try again.",
+                description: error.message || "Unable to load the full article. Please try again.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -113,6 +124,38 @@ function Home() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSearch = async () => {
+        if (!searchQuery.trim()) return;
+        setIsSearching(true);
+        setLoading(true);
+        try {
+            const searchResults = await searchArticles(searchQuery);
+            setArticles(searchResults.articles);
+            setHasMore(searchResults.currentPage < searchResults.totalPages);
+            setPage(searchResults.currentPage + 1);
+        } catch (error) {
+            console.error('Error searching articles:', error);
+            toast({
+                title: "Error searching articles",
+                description: error.message || "An unexpected error occurred",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        setIsSearching(false);
+        setArticles([]);
+        setPage(1);
+        setHasMore(true);
+        loadArticles();
     };
 
     return (
@@ -125,6 +168,26 @@ function Home() {
                     <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
                         Stay informed with the latest news and articles from around the world.
                     </Text>
+                    <InputGroup>
+                        <InputLeftElement pointerEvents="none">
+                            <SearchIcon color="gray.300" />
+                        </InputLeftElement>
+                        <Input
+                            placeholder="Search articles"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            bg={inputBgColor}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        />
+                        <Button ml={2} onClick={handleSearch} isLoading={loading}>
+                            Search
+                        </Button>
+                        {isSearching && (
+                            <Button ml={2} onClick={handleClearSearch}>
+                                Clear
+                            </Button>
+                        )}
+                    </InputGroup>
                     <Fade in={true}>
                         <ArticleGrid
                             articles={articles}
@@ -140,7 +203,7 @@ function Home() {
                             <Text mt={4} color={textColor}>Loading more stories...</Text>
                         </Box>
                     )}
-                    <Box ref={ref} h="20px" />
+                    {!isSearching && <Box ref={ref} h="20px" />}
                 </VStack>
             </Container>
 

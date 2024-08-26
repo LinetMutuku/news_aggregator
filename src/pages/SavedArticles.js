@@ -22,11 +22,15 @@ import {
     ModalCloseButton,
     Container,
     useColorModeValue,
-    Fade
+    Fade,
+    Input,
+    InputGroup,
+    InputLeftElement
 } from "@chakra-ui/react";
+import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
-import { getSavedArticles, unsaveArticle, getArticleById } from '../utils/api';
+import { getSavedArticles, unsaveArticle, getArticleById, searchSavedArticles } from '../utils/api';
 
 function SavedArticles() {
     const [savedArticles, setSavedArticles] = useState([]);
@@ -36,12 +40,15 @@ function SavedArticles() {
     const [articleToDelete, setArticleToDelete] = useState(null);
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [isReadModalOpen, setIsReadModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
     const toast = useToast();
     const cancelRef = React.useRef();
 
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
     const headingColor = useColorModeValue('blue.600', 'blue.300');
+    const inputBgColor = useColorModeValue('white', 'gray.700');
 
     const loadSavedArticles = useCallback(async () => {
         try {
@@ -120,6 +127,9 @@ function SavedArticles() {
     const handleReadArticle = async (article) => {
         try {
             setLoading(true);
+            if (!article.articleId) {
+                throw new Error('Invalid article ID');
+            }
             const fullArticle = await getArticleById(article.articleId);
             setSelectedArticle(fullArticle);
             setIsReadModalOpen(true);
@@ -127,7 +137,7 @@ function SavedArticles() {
             console.error('Error fetching full article:', error);
             toast({
                 title: "Error fetching article",
-                description: "Unable to load the full article. Please try again.",
+                description: error.message || "Unable to load the full article. Please try again.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -135,6 +145,36 @@ function SavedArticles() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSearch = async () => {
+        if (!searchQuery.trim()) {
+            loadSavedArticles();
+            return;
+        }
+        setIsSearching(true);
+        setLoading(true);
+        try {
+            const searchResults = await searchSavedArticles(searchQuery);
+            setSavedArticles(searchResults || []);
+        } catch (error) {
+            console.error('Error searching saved articles:', error);
+            toast({
+                title: "Error searching saved articles",
+                description: error.message || "An unexpected error occurred",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setLoading(false);
+            setIsSearching(false);
+        }
+    };
+
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        loadSavedArticles();
     };
 
     if (loading) {
@@ -165,6 +205,26 @@ function SavedArticles() {
                     <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
                         Revisit and manage your curated collection of saved stories.
                     </Text>
+                    <InputGroup>
+                        <InputLeftElement pointerEvents="none">
+                            <SearchIcon color="gray.300" />
+                        </InputLeftElement>
+                        <Input
+                            placeholder="Search saved articles"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            bg={inputBgColor}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        />
+                        <Button ml={2} onClick={handleSearch} isLoading={loading}>
+                            Search
+                        </Button>
+                        {isSearching && (
+                            <Button ml={2} onClick={handleClearSearch}>
+                                Clear
+                            </Button>
+                        )}
+                    </InputGroup>
                     <Fade in={true}>
                         {savedArticles.length > 0 ? (
                             <ArticleGrid
@@ -175,7 +235,9 @@ function SavedArticles() {
                                 deleteButtonColor="red.400"
                             />
                         ) : (
-                            <Text textAlign="center" fontSize="xl" color={textColor}>You haven't saved any articles yet.</Text>
+                            <Text textAlign="center" fontSize="xl" color={textColor}>
+                                {isSearching ? "No articles match your search." : "You haven't saved any articles yet."}
+                            </Text>
                         )}
                     </Fade>
                 </VStack>
