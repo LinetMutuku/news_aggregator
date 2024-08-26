@@ -31,6 +31,7 @@ import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import { getSavedArticles, unsaveArticle, getArticleById, searchSavedArticles } from '../utils/api';
+import useDebounce from '../hooks/useDebounce';
 
 function SavedArticles() {
     const [savedArticles, setSavedArticles] = useState([]);
@@ -44,6 +45,8 @@ function SavedArticles() {
     const [isSearching, setIsSearching] = useState(false);
     const toast = useToast();
     const cancelRef = React.useRef();
+
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -74,6 +77,39 @@ function SavedArticles() {
     useEffect(() => {
         loadSavedArticles();
     }, [loadSavedArticles]);
+
+    const handleSearch = useCallback(async (query) => {
+        if (!query.trim()) {
+            loadSavedArticles();
+            return;
+        }
+        setIsSearching(true);
+        setLoading(true);
+        try {
+            const searchResults = await searchSavedArticles(query);
+            setSavedArticles(searchResults || []);
+        } catch (error) {
+            console.error('Error searching saved articles:', error);
+            toast({
+                title: "Error searching saved articles",
+                description: error.message || "An unexpected error occurred",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setLoading(false);
+            setIsSearching(false);
+        }
+    }, [loadSavedArticles, toast]);
+
+    useEffect(() => {
+        if (debouncedSearchQuery) {
+            handleSearch(debouncedSearchQuery);
+        } else if (debouncedSearchQuery === '') {
+            loadSavedArticles();
+        }
+    }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
     const handleDeleteClick = (article) => {
         setArticleToDelete(article);
@@ -147,31 +183,6 @@ function SavedArticles() {
         }
     };
 
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) {
-            loadSavedArticles();
-            return;
-        }
-        setIsSearching(true);
-        setLoading(true);
-        try {
-            const searchResults = await searchSavedArticles(searchQuery);
-            setSavedArticles(searchResults || []);
-        } catch (error) {
-            console.error('Error searching saved articles:', error);
-            toast({
-                title: "Error searching saved articles",
-                description: error.message || "An unexpected error occurred",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        } finally {
-            setLoading(false);
-            setIsSearching(false);
-        }
-    };
-
     const handleClearSearch = () => {
         setSearchQuery('');
         loadSavedArticles();
@@ -214,12 +225,8 @@ function SavedArticles() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             bg={inputBgColor}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                         />
-                        <Button ml={2} onClick={handleSearch} isLoading={loading}>
-                            Search
-                        </Button>
-                        {isSearching && (
+                        {searchQuery && (
                             <Button ml={2} onClick={handleClearSearch}>
                                 Clear
                             </Button>

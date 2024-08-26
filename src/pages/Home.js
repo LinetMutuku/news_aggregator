@@ -106,9 +106,6 @@ function Home() {
     const handleReadArticle = async (article) => {
         try {
             setLoading(true);
-            if (!article._id) {
-                throw new Error('Invalid article ID');
-            }
             const fullArticle = await getArticleById(article._id);
             setSelectedArticle(fullArticle);
             setIsReadModalOpen(true);
@@ -116,7 +113,7 @@ function Home() {
             console.error('Error fetching full article:', error);
             toast({
                 title: "Error fetching article",
-                description: error.message || "Unable to load the full article. Please try again.",
+                description: "Unable to load the full article. Please try again.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -132,9 +129,8 @@ function Home() {
         setLoading(true);
         try {
             const searchResults = await searchArticles(searchQuery);
-            setArticles(searchResults.articles);
-            setHasMore(searchResults.currentPage < searchResults.totalPages);
-            setPage(searchResults.currentPage + 1);
+            setArticles(searchResults);
+            setHasMore(false);
         } catch (error) {
             console.error('Error searching articles:', error);
             toast({
