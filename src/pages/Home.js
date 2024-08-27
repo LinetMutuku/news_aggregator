@@ -17,13 +17,59 @@ import {
     Input,
     InputGroup,
     InputLeftElement,
-    Button
+    Button,
+    Alert,
+    AlertIcon,
+    Flex
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import { getRecommendedArticles, saveArticle, getArticleById, searchArticles } from '../utils/api';
 import { useInView } from 'react-intersection-observer';
+
+// Import your background images
+import bg1 from '../images/bg1.jpg';
+import bg2 from '../images/bg2.jpg';
+import bg3 from '../images/bg3.jpg';
+
+// BackgroundCarousel component
+const BackgroundCarousel = ({ images }) => {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+        }, 10000); // Change image every 10 seconds
+
+        return () => clearInterval(interval);
+    }, [images]);
+
+    return (
+        <Box
+            position="absolute"
+            top="0"
+            left="0"
+            right="0"
+            bottom="0"
+            bgImage={`url(${images[currentImageIndex]})`}
+            bgPosition="center"
+            bgRepeat="no-repeat"
+            bgSize="cover"
+            transition="background-image 1s ease-in-out"
+            _before={{
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
+                background: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(5px)',
+            }}
+        />
+    );
+};
 
 function Home() {
     const [articles, setArticles] = useState([]);
@@ -34,16 +80,18 @@ function Home() {
     const [isReadModalOpen, setIsReadModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const [error, setError] = useState(null);
     const toast = useToast();
 
     const { ref, inView } = useInView({
         threshold: 0,
     });
 
-    const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
     const headingColor = useColorModeValue('blue.600', 'blue.300');
     const inputBgColor = useColorModeValue('white', 'gray.700');
+
+    const backgroundImages = [bg1, bg2, bg3];
 
     const loadArticles = useCallback(async () => {
         if (loading || !hasMore || isSearching) return;
@@ -57,8 +105,10 @@ function Home() {
             } else {
                 setHasMore(false);
             }
+            setError(null);
         } catch (error) {
             console.error('Error fetching articles:', error);
+            setError('Failed to load articles. Please try again later.');
             toast({
                 title: "Error fetching articles",
                 description: error.message || "An unexpected error occurred",
@@ -129,10 +179,12 @@ function Home() {
         setLoading(true);
         try {
             const searchResults = await searchArticles(searchQuery);
-            setArticles(searchResults);
+            setArticles(Array.isArray(searchResults) ? searchResults : []);
             setHasMore(false);
+            setError(null);
         } catch (error) {
             console.error('Error searching articles:', error);
+            setError('Failed to search articles. Please try again.');
             toast({
                 title: "Error searching articles",
                 description: error.message || "An unexpected error occurred",
@@ -142,6 +194,7 @@ function Home() {
             });
         } finally {
             setLoading(false);
+            setIsSearching(false);
         }
     };
 
@@ -151,12 +204,14 @@ function Home() {
         setArticles([]);
         setPage(1);
         setHasMore(true);
+        setError(null);
         loadArticles();
     };
 
     return (
-        <Box w="full" bg={bgColor} minH="100vh" py={8}>
-            <Container maxW="container.xl">
+        <Box position="relative" minH="100vh">
+            <BackgroundCarousel images={backgroundImages} />
+            <Container maxW="container.xl" position="relative" zIndex="1" py={8}>
                 <VStack spacing={8} align="stretch">
                     <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
                         Discover Today's Top Stories
@@ -164,26 +219,35 @@ function Home() {
                     <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
                         Stay informed with the latest news and articles from around the world.
                     </Text>
-                    <InputGroup>
-                        <InputLeftElement pointerEvents="none">
-                            <SearchIcon color="gray.300" />
-                        </InputLeftElement>
-                        <Input
-                            placeholder="Search articles"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            bg={inputBgColor}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                        />
-                        <Button ml={2} onClick={handleSearch} isLoading={loading}>
+                    <Flex>
+                        <InputGroup>
+                            <InputLeftElement pointerEvents="none">
+                                <SearchIcon color="gray.300" />
+                            </InputLeftElement>
+                            <Input
+                                placeholder="Search articles"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                bg={inputBgColor}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                borderRightRadius={0}
+                            />
+                        </InputGroup>
+                        <Button onClick={handleSearch} isLoading={loading} borderLeftRadius={0}>
                             Search
                         </Button>
-                        {isSearching && (
-                            <Button ml={2} onClick={handleClearSearch}>
-                                Clear
-                            </Button>
-                        )}
-                    </InputGroup>
+                    </Flex>
+                    {isSearching && (
+                        <Button onClick={handleClearSearch} variant="outline">
+                            Clear Search
+                        </Button>
+                    )}
+                    {error && (
+                        <Alert status="error">
+                            <AlertIcon />
+                            {error}
+                        </Alert>
+                    )}
                     <Fade in={true}>
                         <ArticleGrid
                             articles={articles}
@@ -199,13 +263,13 @@ function Home() {
                             <Text mt={4} color={textColor}>Loading more stories...</Text>
                         </Box>
                     )}
-                    {!isSearching && <Box ref={ref} h="20px" />}
+                    {!isSearching && hasMore && <Box ref={ref} h="20px" />}
                 </VStack>
             </Container>
 
             <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
                 <ModalOverlay />
-                <ModalContent maxH="90vh" bg={bgColor}>
+                <ModalContent maxH="90vh">
                     <ModalCloseButton />
                     <ModalBody p={0}>
                         {selectedArticle && <ArticleDetail article={selectedArticle} />}
