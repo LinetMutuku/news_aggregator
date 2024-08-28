@@ -1,22 +1,33 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Box, VStack, Heading, Spinner, useToast, Modal, ModalOverlay, ModalContent,
-    ModalBody, ModalCloseButton, Container, Text, Fade, useColorModeValue,
-    Input, InputGroup, InputLeftElement, Button, Alert, AlertIcon, Flex
+    Box,
+    VStack,
+    Heading,
+    Spinner,
+    useToast,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalBody,
+    ModalCloseButton,
+    Container,
+    Text,
+    Fade,
+    useColorModeValue,
+    Alert,
+    AlertIcon
 } from "@chakra-ui/react";
-import { SearchIcon } from '@chakra-ui/icons';
-import { debounce } from 'lodash'; // Make sure to install lodash: npm install lodash
+import { useInView } from 'react-intersection-observer';
+import Search from '../components/search';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import { getRecommendedArticles, saveArticle, getArticleById, searchArticles } from '../utils/api';
-import { useInView } from 'react-intersection-observer';
 
 // Import background images
 import bg1 from '../images/bg1.jpg';
 import bg2 from '../images/bg2.jpg';
 import bg3 from '../images/bg3.jpg';
 
-// BackgroundCarousel component
 const BackgroundCarousel = ({ images }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -55,39 +66,33 @@ const BackgroundCarousel = ({ images }) => {
 };
 
 function Home() {
-    // State variables
     const [articles, setArticles] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [isReadModalOpen, setIsReadModalOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [error, setError] = useState(null);
     const toast = useToast();
 
-    // Intersection observer for infinite scrolling
     const { ref, inView } = useInView({
         threshold: 0,
     });
 
-    // Chakra UI color modes
     const textColor = useColorModeValue('gray.800', 'gray.100');
     const headingColor = useColorModeValue('blue.600', 'blue.300');
     const inputBgColor = useColorModeValue('white', 'gray.700');
 
-    // Background images for the carousel
     const backgroundImages = [bg1, bg2, bg3];
 
-    // Function to load articles
-    const loadArticles = useCallback(async () => {
-        if (loading || !hasMore || isSearching) return;
+    const loadArticles = useCallback(async (isInitialLoad = false) => {
+        if (loading || (!hasMore && !isInitialLoad) || isSearching) return;
         setLoading(true);
         try {
             const newArticles = await getRecommendedArticles(page);
             if (Array.isArray(newArticles) && newArticles.length > 0) {
-                setArticles(prevArticles => [...prevArticles, ...newArticles]);
+                setArticles(prevArticles => isInitialLoad ? newArticles : [...prevArticles, ...newArticles]);
                 setPage(prevPage => prevPage + 1);
                 setHasMore(newArticles.length === 20); // Assuming 20 is the limit
             } else {
@@ -107,16 +112,18 @@ function Home() {
         } finally {
             setLoading(false);
         }
-    }, [page, loading, hasMore, toast, isSearching]);
+    }, [page, loading, hasMore, isSearching, toast]);
 
-    // Effect for infinite scrolling
+    useEffect(() => {
+        loadArticles(true);
+    }, [loadArticles]);
+
     useEffect(() => {
         if (inView && !isSearching) {
             loadArticles();
         }
     }, [inView, loadArticles, isSearching]);
 
-    // Function to handle saving an article
     const handleSaveArticle = async (article) => {
         try {
             await saveArticle(article);
@@ -143,7 +150,6 @@ function Home() {
         }
     };
 
-    // Function to handle reading an article
     const handleReadArticle = async (article) => {
         try {
             setLoading(true);
@@ -164,14 +170,13 @@ function Home() {
         }
     };
 
-    // Function to perform search
-    const performSearch = async (query) => {
+    const handleSearch = useCallback(async (query) => {
         if (!query.trim()) {
             setIsSearching(false);
             setArticles([]);
             setPage(1);
             setHasMore(true);
-            loadArticles();
+            loadArticles(true);
             return;
         }
         setIsSearching(true);
@@ -195,32 +200,7 @@ function Home() {
             setLoading(false);
             setIsSearching(false);
         }
-    };
-
-    // Debounced search function
-    const debouncedSearch = useMemo(
-        () => debounce(performSearch, 300),
-        [performSearch]
-    );
-
-    // Effect to trigger search when query changes
-    useEffect(() => {
-        debouncedSearch(searchQuery);
-        // Cleanup function to cancel the debounce on unmount
-        return () => {
-            debouncedSearch.cancel();
-        };
-    }, [searchQuery, debouncedSearch]);
-
-    // Function to handle search query change
-    const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
-    };
-
-    // Function to clear search
-    const handleClearSearch = () => {
-        setSearchQuery('');
-    };
+    }, [loadArticles, toast]);
 
     return (
         <Box position="relative" minH="100vh">
@@ -233,24 +213,7 @@ function Home() {
                     <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
                         Stay informed with the latest news and articles from around the world.
                     </Text>
-                    <Flex>
-                        <InputGroup>
-                            <InputLeftElement pointerEvents="none">
-                                <SearchIcon color="gray.300" />
-                            </InputLeftElement>
-                            <Input
-                                placeholder="Search articles"
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                bg={inputBgColor}
-                            />
-                        </InputGroup>
-                        {searchQuery && (
-                            <Button onClick={handleClearSearch} ml={2}>
-                                Clear
-                            </Button>
-                        )}
-                    </Flex>
+                    <Search onSearch={handleSearch} inputBgColor={inputBgColor} />
                     {error && (
                         <Alert status="error">
                             <AlertIcon />
