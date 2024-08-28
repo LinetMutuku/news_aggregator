@@ -1,34 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-    Box,
-    VStack,
-    Heading,
-    Spinner,
-    useToast,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalBody,
-    ModalCloseButton,
-    Container,
-    Text,
-    Fade,
-    useColorModeValue,
-    Input,
-    InputGroup,
-    InputLeftElement,
-    Button,
-    Alert,
-    AlertIcon,
-    Flex
+    Box, VStack, Heading, Spinner, useToast, Modal, ModalOverlay, ModalContent,
+    ModalBody, ModalCloseButton, Container, Text, Fade, useColorModeValue,
+    Input, InputGroup, InputLeftElement, Button, Alert, AlertIcon, Flex
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
+import { debounce } from 'lodash'; // Make sure to install lodash: npm install lodash
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import { getRecommendedArticles, saveArticle, getArticleById, searchArticles } from '../utils/api';
 import { useInView } from 'react-intersection-observer';
 
-// Import your background images
+// Import background images
 import bg1 from '../images/bg1.jpg';
 import bg2 from '../images/bg2.jpg';
 import bg3 from '../images/bg3.jpg';
@@ -72,6 +55,7 @@ const BackgroundCarousel = ({ images }) => {
 };
 
 function Home() {
+    // State variables
     const [articles, setArticles] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -83,16 +67,20 @@ function Home() {
     const [error, setError] = useState(null);
     const toast = useToast();
 
+    // Intersection observer for infinite scrolling
     const { ref, inView } = useInView({
         threshold: 0,
     });
 
+    // Chakra UI color modes
     const textColor = useColorModeValue('gray.800', 'gray.100');
     const headingColor = useColorModeValue('blue.600', 'blue.300');
     const inputBgColor = useColorModeValue('white', 'gray.700');
 
+    // Background images for the carousel
     const backgroundImages = [bg1, bg2, bg3];
 
+    // Function to load articles
     const loadArticles = useCallback(async () => {
         if (loading || !hasMore || isSearching) return;
         setLoading(true);
@@ -121,12 +109,14 @@ function Home() {
         }
     }, [page, loading, hasMore, toast, isSearching]);
 
+    // Effect for infinite scrolling
     useEffect(() => {
         if (inView && !isSearching) {
             loadArticles();
         }
     }, [inView, loadArticles, isSearching]);
 
+    // Function to handle saving an article
     const handleSaveArticle = async (article) => {
         try {
             await saveArticle(article);
@@ -153,6 +143,7 @@ function Home() {
         }
     };
 
+    // Function to handle reading an article
     const handleReadArticle = async (article) => {
         try {
             setLoading(true);
@@ -173,12 +164,20 @@ function Home() {
         }
     };
 
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) return;
+    // Function to perform search
+    const performSearch = async (query) => {
+        if (!query.trim()) {
+            setIsSearching(false);
+            setArticles([]);
+            setPage(1);
+            setHasMore(true);
+            loadArticles();
+            return;
+        }
         setIsSearching(true);
         setLoading(true);
         try {
-            const searchResults = await searchArticles(searchQuery);
+            const searchResults = await searchArticles(query);
             setArticles(Array.isArray(searchResults) ? searchResults : []);
             setHasMore(false);
             setError(null);
@@ -198,14 +197,29 @@ function Home() {
         }
     };
 
+    // Debounced search function
+    const debouncedSearch = useMemo(
+        () => debounce(performSearch, 300),
+        [performSearch]
+    );
+
+    // Effect to trigger search when query changes
+    useEffect(() => {
+        debouncedSearch(searchQuery);
+        // Cleanup function to cancel the debounce on unmount
+        return () => {
+            debouncedSearch.cancel();
+        };
+    }, [searchQuery, debouncedSearch]);
+
+    // Function to handle search query change
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+    };
+
+    // Function to clear search
     const handleClearSearch = () => {
         setSearchQuery('');
-        setIsSearching(false);
-        setArticles([]);
-        setPage(1);
-        setHasMore(true);
-        setError(null);
-        loadArticles();
     };
 
     return (
@@ -227,21 +241,16 @@ function Home() {
                             <Input
                                 placeholder="Search articles"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={handleSearchChange}
                                 bg={inputBgColor}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                borderRightRadius={0}
                             />
                         </InputGroup>
-                        <Button onClick={handleSearch} isLoading={loading} borderLeftRadius={0}>
-                            Search
-                        </Button>
+                        {searchQuery && (
+                            <Button onClick={handleClearSearch} ml={2}>
+                                Clear
+                            </Button>
+                        )}
                     </Flex>
-                    {isSearching && (
-                        <Button onClick={handleClearSearch} variant="outline">
-                            Clear Search
-                        </Button>
-                    )}
                     {error && (
                         <Alert status="error">
                             <AlertIcon />
