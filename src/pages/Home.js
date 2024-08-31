@@ -18,52 +18,16 @@ import {
     AlertIcon
 } from "@chakra-ui/react";
 import { useInView } from 'react-intersection-observer';
-import Search from '../components/search';
+import Search from '../components/Search';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import { getRecommendedArticles, saveArticle, getArticleById, searchArticles } from '../utils/api';
+import BackgroundCarousel from '../components/BackgroundCarousel';
 
 // Import background images
 import bg1 from '../images/bg1.jpg';
 import bg2 from '../images/bg2.jpg';
 import bg3 from '../images/bg3.jpg';
-
-const BackgroundCarousel = ({ images }) => {
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-        }, 10000); // Change image every 10 seconds
-
-        return () => clearInterval(interval);
-    }, [images]);
-
-    return (
-        <Box
-            position="absolute"
-            top="0"
-            left="0"
-            right="0"
-            bottom="0"
-            bgImage={`url(${images[currentImageIndex]})`}
-            bgPosition="center"
-            bgRepeat="no-repeat"
-            bgSize="cover"
-            transition="background-image 1s ease-in-out"
-            _before={{
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0,
-                background: 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: 'blur(5px)',
-            }}
-        />
-    );
-};
 
 function Home() {
     const [articles, setArticles] = useState([]);
