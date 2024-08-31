@@ -25,7 +25,7 @@ const BackgroundCarousel = ({ images }) => {
         }, 10000); // Change image every 10 seconds
 
         return () => clearInterval(interval);
-    }, [images.length]);
+    }, []);
 
     return (
         <Box

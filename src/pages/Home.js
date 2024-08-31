@@ -18,7 +18,7 @@ import {
     AlertIcon
 } from "@chakra-ui/react";
 import { useInView } from 'react-intersection-observer';
-import Search from '../components/search'; // Import updated Search component
+import Search from '../components/search';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import { getRecommendedArticles, saveArticle, getArticleById, searchArticles } from '../utils/api';
@@ -33,7 +33,7 @@ const BackgroundCarousel = ({ images }) => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setCurrentImageIndex(prevIndex => (prevIndex + 1) % images.length);
+            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
         }, 10000); // Change image every 10 seconds
 
         return () => clearInterval(interval);
@@ -72,8 +72,8 @@ function Home() {
     const [loading, setLoading] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [isReadModalOpen, setIsReadModalOpen] = useState(false);
-    const [error, setError] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
+    const [error, setError] = useState(null);
     const toast = useToast();
 
     const { ref, inView } = useInView({
@@ -205,36 +205,46 @@ function Home() {
     return (
         <Box position="relative" minH="100vh">
             <BackgroundCarousel images={backgroundImages} />
-            <Container maxW="container.xl" position="relative" zIndex="1" p={4}>
-                {error && (
-                    <Alert status="error" mb={4}>
-                        <AlertIcon />
-                        {error}
-                    </Alert>
-                )}
-                <VStack spacing={4} align="start">
-                    <Heading as="h1" size="2xl" color={headingColor}>
-                        News Aggregator
+            <Container maxW="container.xl" position="relative" zIndex="1" py={8}>
+                <VStack spacing={8} align="stretch">
+                    <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
+                        Discover Today's Top Stories
                     </Heading>
+                    <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
+                        Stay informed with the latest news and articles from around the world.
+                    </Text>
                     <Search onSearch={handleSearch} inputBgColor={inputBgColor} />
-                    {loading && <Spinner size="lg" />}
-                    <ArticleGrid
-                        articles={articles}
-                        onSave={handleSaveArticle}
-                        onRead={handleReadArticle}
-                    />
+                    {error && (
+                        <Alert status="error">
+                            <AlertIcon />
+                            {error}
+                        </Alert>
+                    )}
+                    <Fade in={true}>
+                        <ArticleGrid
+                            articles={articles}
+                            onSave={handleSaveArticle}
+                            onRead={handleReadArticle}
+                            showDeleteButton={false}
+                            saveButtonColor="blue.400"
+                        />
+                    </Fade>
+                    {loading && (
+                        <Box textAlign="center" py={8}>
+                            <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
+                            <Text mt={4} color={textColor}>Loading more stories...</Text>
+                        </Box>
+                    )}
+                    {!isSearching && hasMore && <Box ref={ref} h="20px" />}
                 </VStack>
-                <div ref={ref} />
             </Container>
-            <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)}>
+
+            <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
                 <ModalOverlay />
-                <ModalContent>
+                <ModalContent maxH="90vh">
                     <ModalCloseButton />
-                    <ModalBody>
-                        {loading && <Spinner size="lg" />}
-                        {selectedArticle && (
-                            <ArticleDetail article={selectedArticle} />
-                        )}
+                    <ModalBody p={0}>
+                        {selectedArticle && <ArticleDetail article={selectedArticle} />}
                     </ModalBody>
                 </ModalContent>
             </Modal>
