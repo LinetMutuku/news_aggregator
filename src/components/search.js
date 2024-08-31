@@ -14,7 +14,7 @@ function Search({ onSearch, inputBgColor }) {
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
     useEffect(() => {
-        if (debouncedSearchQuery) {
+        if (debouncedSearchQuery || debouncedSearchQuery === '') {
             onSearch(debouncedSearchQuery);
         }
     }, [debouncedSearchQuery, onSearch]);
@@ -29,7 +29,7 @@ function Search({ onSearch, inputBgColor }) {
     };
 
     return (
-        <Flex>
+        <Flex align="center">
             <InputGroup>
                 <InputLeftElement pointerEvents="none">
                     <SearchIcon color="gray.300" />
