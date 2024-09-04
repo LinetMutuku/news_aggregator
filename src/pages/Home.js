@@ -1,28 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-    Box,
-    VStack,
-    Heading,
-    Spinner,
-    useToast,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalBody,
-    ModalCloseButton,
-    Container,
-    Text,
-    Fade,
-    useColorModeValue,
-    Alert,
-    AlertIcon
-} from "@chakra-ui/react";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Box, VStack, Heading, Spinner, useToast, Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton, Container, Text, Fade, useColorModeValue, Alert, AlertIcon } from "@chakra-ui/react";
 import { useInView } from 'react-intersection-observer';
 import Search from '../components/Search';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import { getRecommendedArticles, saveArticle, getArticleById, searchArticles } from '../utils/api';
 import BackgroundCarousel from '../components/BackgroundCarousel';
+import useDebounce from '../hooks/useDebounce';
 
 // Import background images
 import bg1 from '../images/bg1.jpg';
@@ -37,8 +21,11 @@ function Home() {
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [isReadModalOpen, setIsReadModalOpen] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const [error, setError] = useState(null);
     const toast = useToast();
+
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
     const { ref, inView } = useInView({
         threshold: 0,
@@ -48,7 +35,7 @@ function Home() {
     const headingColor = useColorModeValue('blue.600', 'blue.300');
     const inputBgColor = useColorModeValue('white', 'gray.700');
 
-    const backgroundImages = [bg1, bg2, bg3];
+    const backgroundImages = useMemo(() => [bg1, bg2, bg3], []);
 
     const loadArticles = useCallback(async (isInitialLoad = false) => {
         if (loading || (!hasMore && !isInitialLoad) || isSearching) return;
@@ -80,15 +67,15 @@ function Home() {
 
     useEffect(() => {
         loadArticles(true);
-    }, [loadArticles]);
+    }, []); // Only run on mount
 
     useEffect(() => {
-        if (inView && !isSearching) {
+        if (inView && !isSearching && hasMore) {
             loadArticles();
         }
-    }, [inView, loadArticles, isSearching]);
+    }, [inView, loadArticles, isSearching, hasMore]);
 
-    const handleSaveArticle = async (article) => {
+    const handleSaveArticle = useCallback(async (article) => {
         try {
             await saveArticle(article);
             toast({
@@ -112,9 +99,9 @@ function Home() {
                 isClosable: true,
             });
         }
-    };
+    }, [toast]);
 
-    const handleReadArticle = async (article) => {
+    const handleReadArticle = useCallback(async (article) => {
         try {
             setLoading(true);
             const fullArticle = await getArticleById(article._id);
@@ -132,39 +119,47 @@ function Home() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
     const handleSearch = useCallback(async (query) => {
-        if (!query.trim()) {
-            setIsSearching(false);
-            setArticles([]);
-            setPage(1);
-            setHasMore(true);
-            loadArticles(true);
-            return;
-        }
-        setIsSearching(true);
-        setLoading(true);
-        try {
-            const searchResults = await searchArticles(query);
-            setArticles(Array.isArray(searchResults) ? searchResults : []);
-            setHasMore(false);
-            setError(null);
-        } catch (error) {
-            console.error('Error searching articles:', error);
-            setError('Failed to search articles. Please try again.');
-            toast({
-                title: "Error searching articles",
-                description: error.message || "An unexpected error occurred",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        } finally {
-            setLoading(false);
-            setIsSearching(false);
-        }
-    }, [loadArticles, toast]);
+        setSearchQuery(query);
+    }, []);
+
+    useEffect(() => {
+        const performSearch = async () => {
+            if (!debouncedSearchQuery.trim()) {
+                setIsSearching(false);
+                setArticles([]);
+                setPage(1);
+                setHasMore(true);
+                loadArticles(true);
+                return;
+            }
+            setIsSearching(true);
+            setLoading(true);
+            try {
+                const searchResults = await searchArticles(debouncedSearchQuery);
+                setArticles(Array.isArray(searchResults) ? searchResults : []);
+                setHasMore(false);
+                setError(null);
+            } catch (error) {
+                console.error('Error searching articles:', error);
+                setError('Failed to search articles. Please try again.');
+                toast({
+                    title: "Error searching articles",
+                    description: error.message || "An unexpected error occurred",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            } finally {
+                setLoading(false);
+                setIsSearching(false);
+            }
+        };
+
+        performSearch();
+    }, [debouncedSearchQuery, loadArticles, toast]);
 
     return (
         <Box position="relative" minH="100vh">
