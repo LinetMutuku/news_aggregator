@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Box, VStack, Heading, Spinner, useToast, Container, Text, Button,
-    SimpleGrid, Center
+    SimpleGrid, Center, Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton
 } from "@chakra-ui/react";
 import Search from '../components/Search';
 import ArticleCard from '../components/ArticleCard';
-import { getRecommendedArticles, saveArticle, searchArticles } from '../utils/api';
+import ArticleDetail from '../components/ArticleDetail';
+import { getRecommendedArticles, saveArticle, searchArticles, getArticleById } from '../utils/api';
 
 function Home() {
     const [articles, setArticles] = useState([]);
@@ -14,6 +15,8 @@ function Home() {
     const [loading, setLoading] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [error, setError] = useState(null);
+    const [selectedArticle, setSelectedArticle] = useState(null);
+    const [isReadModalOpen, setIsReadModalOpen] = useState(false);
     const toast = useToast();
     const initialLoadComplete = useRef(false);
     const renderCount = useRef(0);
@@ -134,6 +137,26 @@ function Home() {
         }
     }, [toast]);
 
+    const handleReadArticle = async (article) => {
+        try {
+            setLoading(true);
+            const fullArticle = await getArticleById(article._id);
+            setSelectedArticle(fullArticle);
+            setIsReadModalOpen(true);
+        } catch (error) {
+            console.error('Error fetching full article:', error);
+            toast({
+                title: "Error fetching article",
+                description: error.message || "Unable to load the full article. Please try again.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <Box bg="gray.50" minHeight="100vh">
             <Container maxW="container.xl" py={8}>
@@ -154,6 +177,7 @@ function Home() {
                                 key={article._id}
                                 article={article}
                                 onSave={handleSaveArticle}
+                                onRead={() => handleReadArticle(article)}
                             />
                         ))}
                     </SimpleGrid>
@@ -176,6 +200,16 @@ function Home() {
                     )}
                 </VStack>
             </Container>
+
+            <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
+                <ModalOverlay />
+                <ModalContent maxH="90vh">
+                    <ModalCloseButton />
+                    <ModalBody p={0}>
+                        {selectedArticle && <ArticleDetail article={selectedArticle} />}
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }
