@@ -16,12 +16,13 @@ function Home() {
     const [error, setError] = useState(null);
     const toast = useToast();
     const initialLoadComplete = useRef(false);
+    const renderCount = useRef(0);
 
     const loadArticles = useCallback(async (isInitialLoad = false) => {
         if (loading || (!hasMore && !isInitialLoad)) return;
         setLoading(true);
         try {
-            console.log('Fetching articles, page:', page);
+            console.log(`Fetching articles, page: ${page}, isInitialLoad: ${isInitialLoad}`);
             const response = await getRecommendedArticles(page);
             console.log('Received articles:', response);
             const newArticles = response.articles;
@@ -46,26 +47,36 @@ function Home() {
         } finally {
             setLoading(false);
         }
-    }, [page, toast, hasMore, loading]);
+    }, [page, toast]);
+
+    useEffect(() => {
+        console.log(`Component re-rendered. Render count: ${++renderCount.current}`);
+    });
 
     useEffect(() => {
         if (!initialLoadComplete.current) {
+            console.log('Initial load effect triggered');
             loadArticles(true);
             initialLoadComplete.current = true;
         }
     }, [loadArticles]);
 
-    const handleLoadMore = useCallback(() => {
-        setPage(prevPage => prevPage + 1);
-    }, []);
-
     useEffect(() => {
-        if (page > 1) {
+        console.log(`Page changed to ${page}`);
+        if (page > 1 && !isSearching) {
             loadArticles();
         }
-    }, [page, loadArticles]);
+    }, [page, loadArticles, isSearching]);
+
+    const handleLoadMore = useCallback(() => {
+        if (!loading && hasMore) {
+            console.log('Load more triggered');
+            setPage(prevPage => prevPage + 1);
+        }
+    }, [loading, hasMore]);
 
     const handleSearch = useCallback(async (query) => {
+        console.log(`Search triggered with query: ${query}`);
         if (!query.trim()) {
             setIsSearching(false);
             setArticles([]);
@@ -94,7 +105,6 @@ function Home() {
             });
         } finally {
             setLoading(false);
-            setIsSearching(false);
         }
     }, [loadArticles, toast]);
 
