@@ -21,11 +21,11 @@ const BackgroundCarousel = ({ images }) => {
             setTimeout(() => {
                 setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
                 setIsChanging(false);
-            }, 1000); // Duration of fade out animation
-        }, 10000); // Change image every 10 seconds
+            }, 300); // Duration of fade out animation
+        }, 15000); // Change image every 10 seconds
 
         return () => clearInterval(interval);
-    }, []);
+    }, [images]);
 
     return (
         <Box
@@ -40,6 +40,8 @@ const BackgroundCarousel = ({ images }) => {
             backgroundPosition="center"
             backgroundRepeat="no-repeat"
             animation={isChanging ? `${fadeOut} 1s ease-out` : `${fadeIn} 1s ease-in`}
+            filter="blur(8px)"
+            transform="scale(1.1)"
         />
     );
 };

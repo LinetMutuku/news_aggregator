@@ -6,7 +6,18 @@ import {
 import Search from '../components/Search';
 import ArticleCard from '../components/ArticleCard';
 import ArticleDetail from '../components/ArticleDetail';
+import BackgroundCarousel from '../components/BackgroundCarousel';
 import { getRecommendedArticles, saveArticle, searchArticles, getArticleById } from '../utils/api';
+
+import backgroundImage1 from '../images/bg1.jpg';
+import backgroundImage2 from '../images/bg2.jpg';
+import backgroundImage3 from '../images/bg3.jpg';
+
+const backgroundImages = [
+    backgroundImage1,
+    backgroundImage2,
+    backgroundImage3,
+    ]
 
 function Home() {
     const [articles, setArticles] = useState([]);
@@ -158,58 +169,61 @@ function Home() {
     };
 
     return (
-        <Box bg="gray.50" minHeight="100vh">
-            <Container maxW="container.xl" py={8}>
-                <VStack spacing={8} align="stretch">
-                    <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color="blue.600">
-                        Discover Today's Top Stories
-                    </Heading>
-                    <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color="gray.600">
-                        Stay informed with the latest news and articles from around the world.
-                    </Text>
-                    <Search onSearch={handleSearch} />
-                    {error && (
-                        <Text color="red.500" textAlign="center">{error}</Text>
-                    )}
-                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                        {articles.map(article => (
-                            <ArticleCard
-                                key={article._id}
-                                article={article}
-                                onSave={handleSaveArticle}
-                                onRead={() => handleReadArticle(article)}
-                            />
-                        ))}
-                    </SimpleGrid>
-                    {loading && (
-                        <Center py={8}>
-                            <Spinner size="xl" color="blue.500" />
-                        </Center>
-                    )}
-                    {!isSearching && hasMore && (
-                        <Center>
-                            <Button
-                                colorScheme="blue"
-                                onClick={handleLoadMore}
-                                isLoading={loading}
-                                loadingText="Loading"
-                            >
-                                Load More
-                            </Button>
-                        </Center>
-                    )}
-                </VStack>
-            </Container>
+        <Box position="relative" minHeight="100vh">
+            <BackgroundCarousel images={backgroundImages} />
+            <Box bg="rgba(255, 255, 255, 0.8)" minHeight="100vh">
+                <Container maxW="container.xl" py={8}>
+                    <VStack spacing={8} align="stretch">
+                        <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color="blue.600">
+                            Discover Today's Top Stories
+                        </Heading>
+                        <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color="gray.600">
+                            Stay informed with the latest news and articles from around the world.
+                        </Text>
+                        <Search onSearch={handleSearch} />
+                        {error && (
+                            <Text color="red.500" textAlign="center">{error}</Text>
+                        )}
+                        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                            {articles.map(article => (
+                                <ArticleCard
+                                    key={article._id}
+                                    article={article}
+                                    onSave={handleSaveArticle}
+                                    onRead={() => handleReadArticle(article)}
+                                />
+                            ))}
+                        </SimpleGrid>
+                        {loading && (
+                            <Center py={8}>
+                                <Spinner size="xl" color="blue.500" />
+                            </Center>
+                        )}
+                        {!isSearching && hasMore && (
+                            <Center>
+                                <Button
+                                    colorScheme="blue"
+                                    onClick={handleLoadMore}
+                                    isLoading={loading}
+                                    loadingText="Loading"
+                                >
+                                    Load More
+                                </Button>
+                            </Center>
+                        )}
+                    </VStack>
+                </Container>
 
-            <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
-                <ModalOverlay />
-                <ModalContent maxH="90vh">
-                    <ModalCloseButton />
-                    <ModalBody p={0}>
-                        {selectedArticle && <ArticleDetail article={selectedArticle} />}
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
+                <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
+                    <ModalOverlay />
+                    <ModalContent maxH="90vh">
+                        <ModalCloseButton />
+                        <ModalBody p={0}>
+                            {selectedArticle && <ArticleDetail article={selectedArticle} />}
+                        </ModalBody>
+                    </ModalContent>
+                </Modal>
+            </Box>
         </Box>
     );
 }

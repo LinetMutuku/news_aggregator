@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Box,
     VStack,
@@ -30,8 +30,19 @@ import {
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
+import BackgroundCarousel from '../components/BackgroundCarousel';
 import { getSavedArticles, unsaveArticle, getArticleById, searchSavedArticles } from '../utils/api';
 import useDebounce from '../hooks/useDebounce';
+
+import backgroundImage1 from '../images/bg1.jpg';
+import backgroundImage2 from '../images/bg2.jpg';
+import backgroundImage3 from '../images/bg2.jpg';
+
+const backgroundImages = [
+    backgroundImage1,
+    backgroundImage2,
+    backgroundImage3,
+]
 
 function SavedArticles() {
     const [savedArticles, setSavedArticles] = useState([]);
@@ -44,7 +55,7 @@ function SavedArticles() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const toast = useToast();
-    const cancelRef = React.useRef();
+    const cancelRef = useRef();
 
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -207,85 +218,88 @@ function SavedArticles() {
     }
 
     return (
-        <Box w="full" bg={bgColor} minH="100vh" py={8}>
-            <Container maxW="container.xl">
-                <VStack spacing={8} align="stretch">
-                    <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
-                        Your Saved Articles
-                    </Heading>
-                    <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
-                        Revisit and manage your curated collection of saved stories.
-                    </Text>
-                    <InputGroup>
-                        <InputLeftElement pointerEvents="none">
-                            <SearchIcon color="gray.300" />
-                        </InputLeftElement>
-                        <Input
-                            placeholder="Search saved articles"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            bg={inputBgColor}
-                        />
-                        {searchQuery && (
-                            <Button ml={2} onClick={handleClearSearch}>
-                                Clear
-                            </Button>
-                        )}
-                    </InputGroup>
-                    <Fade in={true}>
-                        {savedArticles.length > 0 ? (
-                            <ArticleGrid
-                                articles={savedArticles}
-                                onDelete={handleDeleteClick}
-                                onRead={handleReadArticle}
-                                showDeleteButton={true}
-                                deleteButtonColor="red.400"
+        <Box position="relative" minHeight="100vh">
+            <BackgroundCarousel images={backgroundImages} />
+            <Box bg="rgba(255, 255, 255, 0.8)" minHeight="100vh">
+                <Container maxW="container.xl">
+                    <VStack spacing={8} align="stretch">
+                        <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
+                            Your Saved Articles
+                        </Heading>
+                        <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
+                            Revisit and manage your curated collection of saved stories.
+                        </Text>
+                        <InputGroup>
+                            <InputLeftElement pointerEvents="none">
+                                <SearchIcon color="gray.300" />
+                            </InputLeftElement>
+                            <Input
+                                placeholder="Search saved articles"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                bg={inputBgColor}
                             />
-                        ) : (
-                            <Text textAlign="center" fontSize="xl" color={textColor}>
-                                {isSearching ? "No articles match your search." : "You haven't saved any articles yet."}
-                            </Text>
-                        )}
-                    </Fade>
-                </VStack>
-            </Container>
+                            {searchQuery && (
+                                <Button ml={2} onClick={handleClearSearch}>
+                                    Clear
+                                </Button>
+                            )}
+                        </InputGroup>
+                        <Fade in={true}>
+                            {savedArticles.length > 0 ? (
+                                <ArticleGrid
+                                    articles={savedArticles}
+                                    onDelete={handleDeleteClick}
+                                    onRead={handleReadArticle}
+                                    showDeleteButton={true}
+                                    deleteButtonColor="red.400"
+                                />
+                            ) : (
+                                <Text textAlign="center" fontSize="xl" color={textColor}>
+                                    {isSearching ? "No articles match your search." : "You haven't saved any articles yet."}
+                                </Text>
+                            )}
+                        </Fade>
+                    </VStack>
+                </Container>
 
-            <AlertDialog
-                isOpen={isOpen}
-                leastDestructiveRef={cancelRef}
-                onClose={handleDeleteCancel}
-            >
-                <AlertDialogOverlay>
-                    <AlertDialogContent>
-                        <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                            Unsave Article
-                        </AlertDialogHeader>
+                <AlertDialog
+                    isOpen={isOpen}
+                    leastDestructiveRef={cancelRef}
+                    onClose={handleDeleteCancel}
+                >
+                    <AlertDialogOverlay>
+                        <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                Unsave Article
+                            </AlertDialogHeader>
 
-                        <AlertDialogBody>
-                            Are you sure you want to unsave this article? This action cannot be undone.
-                        </AlertDialogBody>
+                            <AlertDialogBody>
+                                Are you sure you want to unsave this article? This action cannot be undone.
+                            </AlertDialogBody>
 
-                        <AlertDialogFooter>
-                            <Button ref={cancelRef} onClick={handleDeleteCancel}>
-                                Cancel
-                            </Button>
-                            <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3}>
-                                Unsave
-                            </Button>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialogOverlay>
-            </AlertDialog>
+                            <AlertDialogFooter>
+                                <Button ref={cancelRef} onClick={handleDeleteCancel}>
+                                    Cancel
+                                </Button>
+                                <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3}>
+                                    Unsave
+                                </Button>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialogOverlay>
+                </AlertDialog>
 
-            <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
-                <ModalOverlay />
-                <ModalContent maxH="90vh" bg={bgColor}>
-                    <ModalCloseButton />
-                    <ModalBody p={0}>
-                        {selectedArticle && <ArticleDetail article={selectedArticle} />}
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
+                <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
+                    <ModalOverlay />
+                    <ModalContent maxH="90vh" bg={bgColor}>
+                        <ModalCloseButton />
+                        <ModalBody p={0}>
+                            {selectedArticle && <ArticleDetail article={selectedArticle} />}
+                        </ModalBody>
+                    </ModalContent>
+                </Modal>
+            </Box>
         </Box>
     );
 }
