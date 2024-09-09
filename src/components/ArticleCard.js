@@ -4,22 +4,29 @@ import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
-const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton, deleteButtonColor }) => {
+const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) => {
     const bgColor = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.700', 'gray.100');
     const descriptionColor = useColorModeValue('gray.600', 'gray.300');
+    const sourceColor = useColorModeValue('gray.500', 'gray.400');
+
+    if (!article) {
+        console.error('ArticleCard received undefined article');
+        return null;
+    }
 
     const handleAction = (e) => {
         e.stopPropagation();
-        if (showDeleteButton) {
+        if (showDeleteButton && onDelete) {
             onDelete(article);
         } else if (onSave) {
             onSave(article);
         }
     };
 
-    const imageUrl = article.urlToImage || article.imageUrl;
-    const sourceName = article.source?.name || article.source;
+    const imageUrl = article.urlToImage || article.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
+    const sourceName = article.source?.name || article.source || 'Unknown Source';
+    const publishDate = article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Date unknown';
 
     return (
         <MotionBox
@@ -38,7 +45,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton, dele
         >
             <Image
                 src={imageUrl}
-                alt={article.title}
+                alt={article.title || 'Article image'}
                 objectFit="cover"
                 height="200px"
                 width="100%"
@@ -47,7 +54,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton, dele
             <Box p={5} flex="1" display="flex" flexDirection="column">
                 <Flex justifyContent="space-between" alignItems="center" mb={2}>
                     <Badge borderRadius="full" px="2" colorScheme="teal">
-                        {article.category}
+                        {article.category || 'Uncategorized'}
                     </Badge>
                     {(onSave || showDeleteButton) && (
                         <Button
@@ -70,7 +77,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton, dele
                     color={textColor}
                     mb={2}
                 >
-                    {article.title}
+                    {article.title || 'Untitled Article'}
                 </Heading>
 
                 <Text
@@ -80,20 +87,15 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton, dele
                     mb={4}
                     flex="1"
                 >
-                    {article.description}
+                    {article.description || 'No description available'}
                 </Text>
 
                 <Flex justifyContent="space-between" alignItems="center" fontSize="xs" mt="auto">
-                    <Text
-                        color={useColorModeValue('gray.500', 'gray.400')}
-                        fontWeight="medium"
-                    >
+                    <Text color={sourceColor} fontWeight="medium">
                         {sourceName}
                     </Text>
-                    <Text
-                        color={useColorModeValue('gray.500', 'gray.400')}
-                    >
-                        {new Date(article.publishedAt).toLocaleDateString()}
+                    <Text color={sourceColor}>
+                        {publishDate}
                     </Text>
                 </Flex>
             </Box>

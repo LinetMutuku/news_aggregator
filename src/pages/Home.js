@@ -4,20 +4,17 @@ import {
     SimpleGrid, Center, Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton
 } from "@chakra-ui/react";
 import Search from '../components/Search';
-import ArticleCard from '../components/ArticleCard';
+import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import BackgroundCarousel from '../components/BackgroundCarousel';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { getRecommendedArticles, saveArticle, searchArticles, getArticleById } from '../utils/api';
 
 import backgroundImage1 from '../images/bg1.jpg';
 import backgroundImage2 from '../images/bg2.jpg';
 import backgroundImage3 from '../images/bg3.jpg';
 
-const backgroundImages = [
-    backgroundImage1,
-    backgroundImage2,
-    backgroundImage3,
-    ]
+const backgroundImages = [backgroundImage1, backgroundImage2, backgroundImage3];
 
 function Home() {
     const [articles, setArticles] = useState([]);
@@ -42,7 +39,11 @@ function Home() {
             const newArticles = response.articles;
 
             if (newArticles && newArticles.length > 0) {
-                setArticles(prevArticles => isInitialLoad ? newArticles : [...prevArticles, ...newArticles]);
+                setArticles(prevArticles => {
+                    const updatedArticles = isInitialLoad ? newArticles : [...prevArticles, ...newArticles];
+                    console.log('Updated articles:', updatedArticles);
+                    return updatedArticles;
+                });
                 setHasMore(page < response.totalPages);
             } else {
                 setHasMore(false);
@@ -184,16 +185,13 @@ function Home() {
                         {error && (
                             <Text color="red.500" textAlign="center">{error}</Text>
                         )}
-                        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                            {articles.map(article => (
-                                <ArticleCard
-                                    key={article._id}
-                                    article={article}
-                                    onSave={handleSaveArticle}
-                                    onRead={() => handleReadArticle(article)}
-                                />
-                            ))}
-                        </SimpleGrid>
+                        <ErrorBoundary>
+                            <ArticleGrid
+                                articles={articles}
+                                onSave={handleSaveArticle}
+                                onRead={handleReadArticle}
+                            />
+                        </ErrorBoundary>
                         {loading && (
                             <Center py={8}>
                                 <Spinner size="xl" color="blue.500" />
