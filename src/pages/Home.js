@@ -35,17 +35,17 @@ function Home() {
         try {
             console.log(`Fetching articles, page: ${page}, isInitialLoad: ${isInitialLoad}`);
             const response = await getRecommendedArticles(page);
-            console.log('Received articles:', response);
-            const newArticles = response.articles;
+            console.log('Received response:', response);
 
-            if (newArticles && newArticles.length > 0) {
+            if (response && response.recommendations && response.recommendations.length > 0) {
                 setArticles(prevArticles => {
-                    const updatedArticles = isInitialLoad ? newArticles : [...prevArticles, ...newArticles];
+                    const updatedArticles = isInitialLoad ? response.recommendations : [...prevArticles, ...response.recommendations];
                     console.log('Updated articles:', updatedArticles);
                     return updatedArticles;
                 });
                 setHasMore(page < response.totalPages);
             } else {
+                console.log('No articles received or empty recommendations array');
                 setHasMore(false);
             }
             setError(null);
@@ -105,7 +105,8 @@ function Home() {
         setLoading(true);
         try {
             const searchResults = await searchArticles(query);
-            setArticles(searchResults.articles);
+            console.log('Search results:', searchResults);
+            setArticles(searchResults.articles || []);
             setHasMore(false);
             setError(null);
         } catch (error) {
