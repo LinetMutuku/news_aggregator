@@ -1,59 +1,31 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
-    Box,
-    VStack,
-    Heading,
-    Text,
-    useToast,
-    Spinner,
-    Alert,
-    AlertIcon,
-    AlertDialog,
-    AlertDialogBody,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogContent,
-    AlertDialogOverlay,
-    Button,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalBody,
-    ModalCloseButton,
-    Container,
-    useColorModeValue,
-    Fade,
-    Input,
-    InputGroup,
-    InputLeftElement
+    Box, VStack, Heading, Text, useToast, Spinner, Alert, AlertIcon,
+    AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
+    AlertDialogContent, AlertDialogOverlay, Button, Modal, ModalOverlay,
+    ModalContent, ModalBody, ModalCloseButton, Container, useColorModeValue,
+    Fade, Input, InputGroup, InputLeftElement
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import BackgroundCarousel from '../components/BackgroundCarousel';
-import { getSavedArticles, unsaveArticle, getArticleById, searchSavedArticles } from '../utils/api';
+import { fetchSavedArticles, unsaveArticleAction, setSelectedArticle, searchSavedArticlesAction } from '../redux/actions/articleActions';
 import useDebounce from '../hooks/useDebounce';
 
 import backgroundImage1 from '../images/bg1.jpg';
 import backgroundImage2 from '../images/bg2.jpg';
-import backgroundImage3 from '../images/bg2.jpg';
+import backgroundImage3 from '../images/bg3.jpg';
 
-const backgroundImages = [
-    backgroundImage1,
-    backgroundImage2,
-    backgroundImage3,
-]
+const backgroundImages = [backgroundImage1, backgroundImage2, backgroundImage3];
 
 function SavedArticles() {
-    const [savedArticles, setSavedArticles] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [isOpen, setIsOpen] = useState(false);
-    const [articleToDelete, setArticleToDelete] = useState(null);
-    const [selectedArticle, setSelectedArticle] = useState(null);
-    const [isReadModalOpen, setIsReadModalOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
+    const dispatch = useDispatch();
+    const { savedArticles, loading, error, selectedArticle } = useSelector(state => state.articles);
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [articleToDelete, setArticleToDelete] = React.useState(null);
+    const [searchQuery, setSearchQuery] = React.useState('');
     const toast = useToast();
     const cancelRef = useRef();
 
@@ -64,55 +36,21 @@ function SavedArticles() {
     const headingColor = useColorModeValue('blue.600', 'blue.300');
     const inputBgColor = useColorModeValue('white', 'gray.700');
 
-    const loadSavedArticles = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const articles = await getSavedArticles();
-            setSavedArticles(articles || []);
-        } catch (error) {
-            console.error('Error fetching saved articles:', error);
-            setError('Failed to fetch saved articles. Please try again later.');
-            toast({
-                title: "Error fetching saved articles",
-                description: error.response?.data?.message || "An unexpected error occurred",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-        } finally {
-            setLoading(false);
-        }
-    }, [toast]);
+    const loadSavedArticles = useCallback(() => {
+        dispatch(fetchSavedArticles());
+    }, [dispatch]);
 
     useEffect(() => {
         loadSavedArticles();
     }, [loadSavedArticles]);
 
-    const handleSearch = useCallback(async (query) => {
+    const handleSearch = useCallback((query) => {
         if (!query.trim()) {
             loadSavedArticles();
             return;
         }
-        setIsSearching(true);
-        setLoading(true);
-        try {
-            const searchResults = await searchSavedArticles(query);
-            setSavedArticles(searchResults || []);
-        } catch (error) {
-            console.error('Error searching saved articles:', error);
-            toast({
-                title: "Error searching saved articles",
-                description: error.message || "An unexpected error occurred",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        } finally {
-            setLoading(false);
-            setIsSearching(false);
-        }
-    }, [loadSavedArticles, toast]);
+        dispatch(searchSavedArticlesAction(query));
+    }, [dispatch, loadSavedArticles]);
 
     useEffect(() => {
         if (debouncedSearchQuery) {
@@ -130,10 +68,7 @@ function SavedArticles() {
     const handleDeleteConfirm = async () => {
         if (articleToDelete) {
             try {
-                await unsaveArticle(articleToDelete.articleId);
-                setSavedArticles(prevArticles =>
-                    prevArticles.filter(article => article.articleId !== articleToDelete.articleId)
-                );
+                await dispatch(unsaveArticleAction(articleToDelete.articleId));
                 toast({
                     title: "Article unsaved",
                     status: "success",
@@ -142,26 +77,13 @@ function SavedArticles() {
                 });
             } catch (error) {
                 console.error('Error unsaving article:', error);
-                if (error.response && error.response.status === 404) {
-                    toast({
-                        title: "Article already unsaved",
-                        description: "This article has already been removed from your saved list.",
-                        status: "info",
-                        duration: 5000,
-                        isClosable: true,
-                    });
-                    setSavedArticles(prevArticles =>
-                        prevArticles.filter(article => article.articleId !== articleToDelete.articleId)
-                    );
-                } else {
-                    toast({
-                        title: "Error unsaving article",
-                        description: "An unexpected error occurred. Please try again.",
-                        status: "error",
-                        duration: 5000,
-                        isClosable: true,
-                    });
-                }
+                toast({
+                    title: "Error unsaving article",
+                    description: "An unexpected error occurred. Please try again.",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
             }
         }
         setIsOpen(false);
@@ -171,27 +93,8 @@ function SavedArticles() {
         setIsOpen(false);
     };
 
-    const handleReadArticle = async (article) => {
-        try {
-            setLoading(true);
-            if (!article.articleId) {
-                throw new Error('Invalid article ID');
-            }
-            const fullArticle = await getArticleById(article.articleId);
-            setSelectedArticle(fullArticle);
-            setIsReadModalOpen(true);
-        } catch (error) {
-            console.error('Error fetching full article:', error);
-            toast({
-                title: "Error fetching article",
-                description: error.message || "Unable to load the full article. Please try again.",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-        } finally {
-            setLoading(false);
-        }
+    const handleReadArticle = (article) => {
+        dispatch(setSelectedArticle(article.articleId));
     };
 
     const handleClearSearch = () => {
@@ -256,7 +159,7 @@ function SavedArticles() {
                                 />
                             ) : (
                                 <Text textAlign="center" fontSize="xl" color={textColor}>
-                                    {isSearching ? "No articles match your search." : "You haven't saved any articles yet."}
+                                    {searchQuery ? "No articles match your search." : "You haven't saved any articles yet."}
                                 </Text>
                             )}
                         </Fade>
@@ -290,7 +193,7 @@ function SavedArticles() {
                     </AlertDialogOverlay>
                 </AlertDialog>
 
-                <Modal isOpen={isReadModalOpen} onClose={() => setIsReadModalOpen(false)} size="xl" scrollBehavior="inside">
+                <Modal isOpen={!!selectedArticle} onClose={() => dispatch(setSelectedArticle(null))} size="xl" scrollBehavior="inside">
                     <ModalOverlay />
                     <ModalContent maxH="90vh" bg={bgColor}>
                         <ModalCloseButton />
