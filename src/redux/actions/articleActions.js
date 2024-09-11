@@ -1,4 +1,4 @@
-import { getRecommendedArticles, searchArticles, saveArticle, getArticleById, getSavedArticles, unsaveArticle, searchSavedArticles } from '../../utils/api';
+import * as api from '../../utils/api';
 
 export const FETCH_ARTICLES_REQUEST = 'FETCH_ARTICLES_REQUEST';
 export const FETCH_ARTICLES_SUCCESS = 'FETCH_ARTICLES_SUCCESS';
@@ -11,102 +11,135 @@ export const UNSAVE_ARTICLE = 'UNSAVE_ARTICLE';
 export const SEARCH_SAVED_ARTICLES = 'SEARCH_SAVED_ARTICLES';
 
 export const fetchArticles = (page) => async (dispatch) => {
+    console.log('fetchArticles action called with page:', page);
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
-        const response = await getRecommendedArticles(page);
+        const response = await api.getRecommendedArticles(page);
+        console.log('API response received:', response);
+        if (!Array.isArray(response.articles)) {
+            throw new Error('Received invalid data structure from API');
+        }
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
-            payload: response.recommendations,
+            payload: response.articles,
             totalPages: response.totalPages
         });
     } catch (error) {
+        console.error('Error in fetchArticles:', error);
         dispatch({
             type: FETCH_ARTICLES_FAILURE,
-            payload: error.message
+            payload: error.message || 'Failed to fetch articles'
         });
     }
 };
 
 export const searchArticlesAction = (query) => async (dispatch) => {
+    console.log('searchArticlesAction called with query:', query);
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
-        const response = await searchArticles(query);
+        const response = await api.searchArticles(query);
+        console.log('Search API response received:', response);
+        if (!Array.isArray(response.articles)) {
+            throw new Error('Received invalid data structure from search API');
+        }
         dispatch({
             type: SEARCH_ARTICLES,
             payload: response.articles
         });
     } catch (error) {
+        console.error('Error in searchArticlesAction:', error);
         dispatch({
             type: FETCH_ARTICLES_FAILURE,
-            payload: error.message
+            payload: error.message || 'Failed to search articles'
         });
     }
 };
 
 export const saveArticleAction = (article) => async (dispatch) => {
+    console.log('saveArticleAction called with article:', article);
     try {
-        await saveArticle(article);
+        const savedArticle = await api.saveArticle(article);
+        console.log('Article saved:', savedArticle);
         dispatch({
             type: SAVE_ARTICLE,
-            payload: article._id
+            payload: savedArticle
         });
     } catch (error) {
-        console.error('Error saving article:', error);
+        console.error('Error in saveArticleAction:', error);
+        // You might want to dispatch a failure action here
     }
 };
 
 export const setSelectedArticle = (articleId) => async (dispatch) => {
+    console.log('setSelectedArticle called with id:', articleId);
     try {
-        const article = await getArticleById(articleId);
+        const article = await api.getArticleById(articleId);
+        console.log('Selected article details:', article);
         dispatch({
             type: SET_SELECTED_ARTICLE,
             payload: article
         });
     } catch (error) {
-        console.error('Error fetching article:', error);
+        console.error('Error in setSelectedArticle:', error);
+        // You might want to dispatch a failure action here
     }
 };
 
 export const fetchSavedArticles = () => async (dispatch) => {
+    console.log('fetchSavedArticles called');
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
-        const articles = await getSavedArticles();
+        const savedArticles = await api.getSavedArticles();
+        console.log('Saved articles received:', savedArticles);
+        if (!Array.isArray(savedArticles)) {
+            throw new Error('Received invalid data structure for saved articles');
+        }
         dispatch({
             type: FETCH_SAVED_ARTICLES,
-            payload: articles
+            payload: savedArticles
         });
     } catch (error) {
+        console.error('Error in fetchSavedArticles:', error);
         dispatch({
             type: FETCH_ARTICLES_FAILURE,
-            payload: error.message
+            payload: error.message || 'Failed to fetch saved articles'
         });
     }
 };
 
 export const unsaveArticleAction = (articleId) => async (dispatch) => {
+    console.log('unsaveArticleAction called with id:', articleId);
     try {
-        await unsaveArticle(articleId);
+        await api.unsaveArticle(articleId);
+        console.log('Article unsaved successfully');
         dispatch({
             type: UNSAVE_ARTICLE,
             payload: articleId
         });
     } catch (error) {
-        console.error('Error unsaving article:', error);
+        console.error('Error in unsaveArticleAction:', error);
+        // You might want to dispatch a failure action here
     }
 };
 
 export const searchSavedArticlesAction = (query) => async (dispatch) => {
+    console.log('searchSavedArticlesAction called with query:', query);
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
-        const results = await searchSavedArticles(query);
+        const response = await api.searchSavedArticles(query);
+        console.log('Saved articles search response:', response);
+        if (!Array.isArray(response)) {
+            throw new Error('Received invalid data structure from saved articles search API');
+        }
         dispatch({
             type: SEARCH_SAVED_ARTICLES,
-            payload: results
+            payload: response
         });
     } catch (error) {
+        console.error('Error in searchSavedArticlesAction:', error);
         dispatch({
             type: FETCH_ARTICLES_FAILURE,
-            payload: error.message
+            payload: error.message || 'Failed to search saved articles'
         });
     }
 };

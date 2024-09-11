@@ -29,7 +29,7 @@ function SavedArticles() {
     const toast = useToast();
     const cancelRef = useRef();
 
-    const debouncedSearchQuery = useDebounce(searchQuery, 300);
+    const debouncedSearchQuery = useDebounce(searchQuery);
 
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
