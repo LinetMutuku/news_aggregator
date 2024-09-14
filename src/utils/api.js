@@ -1,12 +1,12 @@
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
     baseURL: API_URL,
     withCredentials: true,
-    timeout: 30000 // Increased to 30 seconds
+    timeout: 10000 // 10 seconds timeout
 });
 
 // Implement retry logic
@@ -24,7 +24,6 @@ api.interceptors.request.use((config) => {
     if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
     }
-    console.log(`Making ${config.method.toUpperCase()} request to ${config.url}`);
     return config;
 }, (error) => {
     console.error('Request interceptor error:', error);
@@ -33,25 +32,17 @@ api.interceptors.request.use((config) => {
 
 // Response interceptor
 api.interceptors.response.use((response) => {
-    console.log(`Received response from ${response.config.url}:`, response.status);
     return response;
 }, (error) => {
-    if (error.response) {
-        console.error(`Error response from ${error.config.url}:`, error.response.status, error.response.data);
-        if (error.response.status === 401) {
-            console.warn('Unauthorized access, redirecting to login');
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-        }
-    } else if (error.request) {
-        console.error('No response received:', error.request);
-    } else {
-        console.error('Error setting up request:', error.message);
+    if (error.response && error.response.status === 401) {
+        console.warn('Unauthorized access, redirecting to login');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
     }
     return Promise.reject(error);
 });
 
-// Helper function for API calls with improved error handling
+// Helper function for API calls
 const apiCall = async (method, url, data = null, params = null) => {
     try {
         const response = await api({
@@ -63,9 +54,6 @@ const apiCall = async (method, url, data = null, params = null) => {
         return response.data;
     } catch (error) {
         console.error(`Error in ${method.toUpperCase()} ${url}:`, error);
-        if (error.code === 'ECONNABORTED') {
-            throw new Error('The request timed out. Please try again later.');
-        }
         throw error;
     }
 };
