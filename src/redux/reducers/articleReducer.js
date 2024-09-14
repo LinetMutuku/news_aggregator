@@ -30,18 +30,10 @@ export default function articleReducer(state = initialState, action) {
                 error: null
             };
         case FETCH_ARTICLES_SUCCESS:
-            if (!Array.isArray(action.payload)) {
-                console.error('Received non-iterable payload:', action.payload);
-                return {
-                    ...state,
-                    loading: false,
-                    error: 'Received invalid data from server'
-                };
-            }
             return {
                 ...state,
                 loading: false,
-                articles: [...state.articles, ...action.payload],
+                articles: state.page === 1 ? action.payload : [...state.articles, ...action.payload],
                 hasMore: state.page < action.totalPages,
                 page: state.page + 1,
                 totalPages: action.totalPages,
@@ -54,26 +46,19 @@ export default function articleReducer(state = initialState, action) {
                 error: action.payload
             };
         case SEARCH_ARTICLES:
-            if (!Array.isArray(action.payload)) {
-                console.error('Received non-iterable payload for search:', action.payload);
-                return {
-                    ...state,
-                    loading: false,
-                    error: 'Received invalid search results from server'
-                };
-            }
             return {
                 ...state,
                 loading: false,
                 articles: action.payload,
                 hasMore: false,
+                page: 1,
                 error: null
             };
         case SAVE_ARTICLE:
             return {
                 ...state,
                 articles: state.articles.map(article =>
-                    article._id === action.payload ? { ...article, isSaved: true } : article
+                    article._id === action.payload._id ? { ...article, isSaved: true } : article
                 ),
                 savedArticles: [...state.savedArticles, action.payload]
             };
@@ -83,14 +68,6 @@ export default function articleReducer(state = initialState, action) {
                 selectedArticle: action.payload
             };
         case FETCH_SAVED_ARTICLES:
-            if (!Array.isArray(action.payload)) {
-                console.error('Received non-iterable payload for saved articles:', action.payload);
-                return {
-                    ...state,
-                    loading: false,
-                    error: 'Received invalid saved articles data from server'
-                };
-            }
             return {
                 ...state,
                 loading: false,
@@ -106,14 +83,6 @@ export default function articleReducer(state = initialState, action) {
                 )
             };
         case SEARCH_SAVED_ARTICLES:
-            if (!Array.isArray(action.payload)) {
-                console.error('Received non-iterable payload for saved articles search:', action.payload);
-                return {
-                    ...state,
-                    loading: false,
-                    error: 'Received invalid saved articles search results from server'
-                };
-            }
             return {
                 ...state,
                 loading: false,
