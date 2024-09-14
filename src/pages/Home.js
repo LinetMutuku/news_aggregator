@@ -10,6 +10,7 @@ import Search from '../components/Search';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { debounce } from 'lodash';
 
 function Home() {
     const dispatch = useDispatch();
@@ -18,45 +19,47 @@ function Home() {
     const toast = useToast();
     const [retryCount, setRetryCount] = useState(0);
 
-    const loadArticles = useCallback((isInitialLoad = false) => {
-        dispatch(fetchArticles(isInitialLoad ? 1 : page))
-            .catch(error => {
-                console.error('Error loading articles:', error);
-                if (error.response && error.response.status === 401) {
-                    // Token might be expired or invalid
-                    localStorage.removeItem('token');
-                    navigate('/login');
-                    toast({
-                        title: "Authentication Error",
-                        description: "Please log in again.",
-                        status: "error",
-                        duration: 5000,
-                        isClosable: true,
-                    });
-                } else {
-                    toast({
-                        title: "Error loading articles",
-                        description: error.message,
-                        status: "error",
-                        duration: 5000,
-                        isClosable: true,
-                    });
-                }
-            });
-    }, [dispatch, page, navigate, toast]);
+    const debouncedFetchArticles = useCallback(
+        debounce((isInitialLoad) => {
+            dispatch(fetchArticles(isInitialLoad ? 1 : page))
+                .catch(error => {
+                    console.error('Error loading articles:', error);
+                    if (error.response && error.response.status === 401) {
+                        localStorage.removeItem('token');
+                        navigate('/login');
+                        toast({
+                            title: "Authentication Error",
+                            description: "Please log in again.",
+                            status: "error",
+                            duration: 5000,
+                            isClosable: true,
+                        });
+                    } else {
+                        toast({
+                            title: "Error loading articles",
+                            description: error.message,
+                            status: "error",
+                            duration: 5000,
+                            isClosable: true,
+                        });
+                    }
+                });
+        }, 300),
+        [dispatch, page, navigate, toast]
+    );
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
         } else {
-            loadArticles(true);
+            debouncedFetchArticles(true);
         }
-    }, [loadArticles, navigate]);
+    }, [debouncedFetchArticles, navigate]);
 
     const handleSearch = async (query) => {
         if (!query.trim()) {
-            loadArticles(true);
+            debouncedFetchArticles(true);
             return;
         }
         try {
@@ -100,7 +103,7 @@ function Home() {
 
     const handleRetry = () => {
         setRetryCount(prev => prev + 1);
-        loadArticles(true);
+        debouncedFetchArticles(true);
     };
 
     if (loading && articles.length === 0) {
@@ -144,7 +147,7 @@ function Home() {
                             <Center>
                                 <Button
                                     colorScheme="blue"
-                                    onClick={() => loadArticles()}
+                                    onClick={() => debouncedFetchArticles(false)}
                                     isLoading={loading}
                                     loadingText="Loading"
                                 >
