@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,44 +17,34 @@ function Home() {
     const navigate = useNavigate();
     const { articles, loading, error, hasMore, page, selectedArticle } = useSelector(state => state.articles);
     const toast = useToast();
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     const debouncedFetchArticles = useCallback(
-        debounce((isInitialLoad) => {
-            dispatch(fetchArticles(isInitialLoad ? 1 : page))
+        debounce((isInitial) => {
+            dispatch(fetchArticles(isInitial ? 1 : page))
                 .catch(error => {
                     console.error('Error loading articles:', error);
-                    if (error.response && error.response.status === 401) {
-                        localStorage.removeItem('token');
-                        navigate('/login');
-                        toast({
-                            title: "Authentication Error",
-                            description: "Please log in again.",
-                            status: "error",
-                            duration: 5000,
-                            isClosable: true,
-                        });
-                    } else {
-                        toast({
-                            title: "Error loading articles",
-                            description: error.message || "An unexpected error occurred. Please try again.",
-                            status: "error",
-                            duration: 5000,
-                            isClosable: true,
-                        });
-                    }
+                    toast({
+                        title: "Error loading articles",
+                        description: error.message || "An unexpected error occurred. Please try again.",
+                        status: "error",
+                        duration: 5000,
+                        isClosable: true,
+                    });
                 });
         }, 300),
-        [dispatch, page, navigate, toast]
+        [dispatch, page, toast]
     );
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
-        } else {
+        } else if (isInitialLoad) {
             debouncedFetchArticles(true);
+            setIsInitialLoad(false);
         }
-    }, [debouncedFetchArticles, navigate]);
+    }, [debouncedFetchArticles, navigate, isInitialLoad]);
 
     const handleSearch = async (query) => {
         if (!query.trim()) {
@@ -100,8 +90,8 @@ function Home() {
         dispatch(setSelectedArticle(article._id));
     };
 
-    const handleRetry = () => {
-        debouncedFetchArticles(true);
+    const handleLoadMore = () => {
+        debouncedFetchArticles(false);
     };
 
     if (loading && articles.length === 0) {
@@ -131,7 +121,7 @@ function Home() {
                                 <AlertIcon />
                                 <AlertTitle mr={2}>Error!</AlertTitle>
                                 <AlertDescription>{error}</AlertDescription>
-                                <Button ml={4} onClick={handleRetry}>Retry</Button>
+                                <Button ml={4} onClick={() => debouncedFetchArticles(true)}>Retry</Button>
                             </Alert>
                         )}
 
@@ -146,7 +136,7 @@ function Home() {
                             <Center>
                                 <Button
                                     colorScheme="blue"
-                                    onClick={() => debouncedFetchArticles(false)}
+                                    onClick={handleLoadMore}
                                     isLoading={loading}
                                     loadingText="Loading"
                                 >
