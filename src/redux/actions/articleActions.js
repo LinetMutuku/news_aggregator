@@ -30,6 +30,7 @@ export const fetchArticles = (page) => async (dispatch) => {
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to fetch articles'
         });
+        throw error;
     }
 };
 
@@ -52,6 +53,7 @@ export const searchArticlesAction = (query) => async (dispatch) => {
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to search articles'
         });
+        throw error;
     }
 };
 
@@ -70,6 +72,7 @@ export const saveArticleAction = (article) => async (dispatch) => {
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to save article'
         });
+        throw error;
     }
 };
 
@@ -88,6 +91,7 @@ export const setSelectedArticle = (articleId) => async (dispatch) => {
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to fetch article details'
         });
+        throw error;
     }
 };
 
@@ -110,6 +114,7 @@ export const fetchSavedArticles = () => async (dispatch) => {
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to fetch saved articles'
         });
+        throw error;
     }
 };
 
@@ -128,6 +133,7 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to unsave article'
         });
+        throw error;
     }
 };
 
@@ -150,5 +156,6 @@ export const searchSavedArticlesAction = (query) => async (dispatch) => {
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to search saved articles'
         });
+        throw error;
     }
 };
