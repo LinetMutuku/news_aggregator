@@ -26,12 +26,18 @@ api.interceptors.response.use((response) => {
     console.log(`Received response from ${response.config.url}:`, response.status);
     return response;
 }, (error) => {
-    if (error.response && error.response.status === 401) {
-        console.warn('Unauthorized access, redirecting to login');
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+    if (error.response) {
+        console.error(`Error response from ${error.config.url}:`, error.response.status, error.response.data);
+        if (error.response.status === 401) {
+            console.warn('Unauthorized access, redirecting to login');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+    } else if (error.request) {
+        console.error('No response received:', error.request);
+    } else {
+        console.error('Error setting up request:', error.message);
     }
-    console.error('Response interceptor error:', error);
     return Promise.reject(error);
 });
 
