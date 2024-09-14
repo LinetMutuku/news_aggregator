@@ -1,11 +1,21 @@
 import axios from 'axios';
+import axiosRetry from 'axios-retry';
 
 const API_URL = 'http://localhost:5000/api';
 
 const api = axios.create({
     baseURL: API_URL,
     withCredentials: true,
-    timeout: 10000 // 10 seconds timeout
+    timeout: 30000 // Increased to 30 seconds
+});
+
+// Implement retry logic
+axiosRetry(api, {
+    retries: 3,
+    retryDelay: axiosRetry.exponentialDelay,
+    retryCondition: (error) => {
+        return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.code === 'ECONNABORTED';
+    }
 });
 
 // Request interceptor
@@ -41,7 +51,7 @@ api.interceptors.response.use((response) => {
     return Promise.reject(error);
 });
 
-// Helper function for API calls
+// Helper function for API calls with improved error handling
 const apiCall = async (method, url, data = null, params = null) => {
     try {
         const response = await api({
@@ -53,6 +63,9 @@ const apiCall = async (method, url, data = null, params = null) => {
         return response.data;
     } catch (error) {
         console.error(`Error in ${method.toUpperCase()} ${url}:`, error);
+        if (error.code === 'ECONNABORTED') {
+            throw new Error('The request timed out. Please try again later.');
+        }
         throw error;
     }
 };

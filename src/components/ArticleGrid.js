@@ -1,9 +1,17 @@
 import React from 'react';
-import { SimpleGrid, Container, VStack, Text } from "@chakra-ui/react";
+import { SimpleGrid, Container, VStack, Text, Spinner, Center } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 
-const ArticleGrid = ({ articles, onSave, onDelete, onRead, showDeleteButton, deleteButtonColor }) => {
+const ArticleGrid = ({ articles, onSave, onRead, loading }) => {
     console.log('ArticleGrid received articles:', articles);
+
+    if (loading) {
+        return (
+            <Center height="200px">
+                <Spinner size="xl" />
+            </Center>
+        );
+    }
 
     if (!articles || articles.length === 0) {
         console.log('No articles to display');
@@ -25,10 +33,7 @@ const ArticleGrid = ({ articles, onSave, onDelete, onRead, showDeleteButton, del
                                 key={article._id || article.id || article.articleId}
                                 article={article}
                                 onSave={onSave}
-                                onDelete={onDelete}
                                 onRead={onRead}
-                                showDeleteButton={showDeleteButton}
-                                deleteButtonColor={deleteButtonColor}
                             />
                         );
                     })}

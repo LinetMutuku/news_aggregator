@@ -68,10 +68,6 @@ export const saveArticleAction = (article) => async (dispatch) => {
         });
     } catch (error) {
         console.error('Error in saveArticleAction:', error);
-        dispatch({
-            type: FETCH_ARTICLES_FAILURE,
-            payload: error.message || 'Failed to save article'
-        });
         throw error;
     }
 };
@@ -87,10 +83,6 @@ export const setSelectedArticle = (articleId) => async (dispatch) => {
         });
     } catch (error) {
         console.error('Error in setSelectedArticle:', error);
-        dispatch({
-            type: FETCH_ARTICLES_FAILURE,
-            payload: error.message || 'Failed to fetch article details'
-        });
         throw error;
     }
 };
@@ -129,10 +121,6 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
         });
     } catch (error) {
         console.error('Error in unsaveArticleAction:', error);
-        dispatch({
-            type: FETCH_ARTICLES_FAILURE,
-            payload: error.message || 'Failed to unsave article'
-        });
         throw error;
     }
 };

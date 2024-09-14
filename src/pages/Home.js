@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,7 +17,6 @@ function Home() {
     const navigate = useNavigate();
     const { articles, loading, error, hasMore, page, selectedArticle } = useSelector(state => state.articles);
     const toast = useToast();
-    const [retryCount, setRetryCount] = useState(0);
 
     const debouncedFetchArticles = useCallback(
         debounce((isInitialLoad) => {
@@ -37,7 +36,7 @@ function Home() {
                     } else {
                         toast({
                             title: "Error loading articles",
-                            description: error.message,
+                            description: error.message || "An unexpected error occurred. Please try again.",
                             status: "error",
                             duration: 5000,
                             isClosable: true,
@@ -68,7 +67,7 @@ function Home() {
             console.error('Error in handleSearch:', error);
             toast({
                 title: "Error searching articles",
-                description: error.message,
+                description: error.message || "An unexpected error occurred. Please try again.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -89,7 +88,7 @@ function Home() {
             console.error('Error saving article:', error);
             toast({
                 title: "Error saving article",
-                description: error.message || "An unexpected error occurred",
+                description: error.message || "An unexpected error occurred. Please try again.",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
@@ -102,7 +101,6 @@ function Home() {
     };
 
     const handleRetry = () => {
-        setRetryCount(prev => prev + 1);
         debouncedFetchArticles(true);
     };
 
@@ -141,6 +139,7 @@ function Home() {
                             articles={articles}
                             onSave={handleSaveArticle}
                             onRead={handleReadArticle}
+                            loading={loading}
                         />
 
                         {hasMore && (
