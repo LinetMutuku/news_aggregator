@@ -16,12 +16,12 @@ export const fetchArticles = (page) => async (dispatch) => {
     try {
         const response = await api.getRecommendedArticles(page);
         console.log('API response received:', response);
-        if (!Array.isArray(response.articles)) {
+        if (!Array.isArray(response.recommendations)) {
             throw new Error('Received invalid data structure from API');
         }
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
-            payload: response.articles,
+            payload: response.recommendations,
             totalPages: response.totalPages
         });
     } catch (error) {
@@ -66,7 +66,10 @@ export const saveArticleAction = (article) => async (dispatch) => {
         });
     } catch (error) {
         console.error('Error in saveArticleAction:', error);
-        // You might want to dispatch a failure action here
+        dispatch({
+            type: FETCH_ARTICLES_FAILURE,
+            payload: error.message || 'Failed to save article'
+        });
     }
 };
 
@@ -81,7 +84,10 @@ export const setSelectedArticle = (articleId) => async (dispatch) => {
         });
     } catch (error) {
         console.error('Error in setSelectedArticle:', error);
-        // You might want to dispatch a failure action here
+        dispatch({
+            type: FETCH_ARTICLES_FAILURE,
+            payload: error.message || 'Failed to fetch article details'
+        });
     }
 };
 
@@ -118,7 +124,10 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
         });
     } catch (error) {
         console.error('Error in unsaveArticleAction:', error);
-        // You might want to dispatch a failure action here
+        dispatch({
+            type: FETCH_ARTICLES_FAILURE,
+            payload: error.message || 'Failed to unsave article'
+        });
     }
 };
 
