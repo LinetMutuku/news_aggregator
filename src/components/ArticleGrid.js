@@ -38,6 +38,11 @@ const ArticleGrid = React.memo(({ articles, onSave, onRead, loading }) => {
             </VStack>
         </Container>
     );
+}, (prevProps, nextProps) => {
+    return prevProps.loading === nextProps.loading &&
+        prevProps.articles === nextProps.articles &&
+        prevProps.onSave === nextProps.onSave &&
+        prevProps.onRead === nextProps.onRead;
 });
 
 export default ArticleGrid;

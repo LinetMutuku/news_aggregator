@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -46,7 +46,7 @@ function Home() {
         }
     }, [debouncedFetchArticles, navigate, isInitialLoad]);
 
-    const handleSearch = async (query) => {
+    const handleSearch = useCallback(async (query) => {
         if (!query.trim()) {
             debouncedFetchArticles(true);
             return;
@@ -63,9 +63,9 @@ function Home() {
                 isClosable: true,
             });
         }
-    };
+    }, [debouncedFetchArticles, dispatch, toast]);
 
-    const handleSaveArticle = async (article) => {
+    const handleSaveArticle = useCallback(async (article) => {
         try {
             await dispatch(saveArticleAction(article));
             toast({
@@ -84,15 +84,22 @@ function Home() {
                 isClosable: true,
             });
         }
-    };
+    }, [dispatch, toast]);
 
-    const handleReadArticle = (article) => {
+    const handleReadArticle = useCallback((article) => {
         dispatch(setSelectedArticle(article._id));
-    };
+    }, [dispatch]);
 
-    const handleLoadMore = () => {
+    const handleLoadMore = useCallback(() => {
         debouncedFetchArticles(false);
-    };
+    }, [debouncedFetchArticles]);
+
+    const articleGridProps = useMemo(() => ({
+        articles,
+        onSave: handleSaveArticle,
+        onRead: handleReadArticle,
+        loading,
+    }), [articles, handleSaveArticle, handleReadArticle, loading]);
 
     if (loading && articles.length === 0) {
         return (
@@ -125,12 +132,7 @@ function Home() {
                             </Alert>
                         )}
 
-                        <ArticleGrid
-                            articles={articles}
-                            onSave={handleSaveArticle}
-                            onRead={handleReadArticle}
-                            loading={loading}
-                        />
+                        <ArticleGrid {...articleGridProps} />
 
                         {hasMore && (
                             <Center>
