@@ -33,9 +33,9 @@ export default function articleReducer(state = initialState, action) {
             return {
                 ...state,
                 loading: false,
-                articles: state.page === 1 ? action.payload : [...state.articles, ...action.payload],
-                hasMore: state.page < action.totalPages,
-                page: state.page + 1,
+                articles: action.currentPage === 1 ? action.payload : [...state.articles, ...action.payload],
+                hasMore: action.currentPage < action.totalPages,
+                page: action.currentPage + 1,
                 totalPages: action.totalPages,
                 error: null
             };
@@ -50,8 +50,9 @@ export default function articleReducer(state = initialState, action) {
                 ...state,
                 loading: false,
                 articles: action.payload,
-                hasMore: false,
-                page: 1,
+                hasMore: action.currentPage < action.totalPages,
+                page: action.currentPage + 1,
+                totalPages: action.totalPages,
                 error: null
             };
         case SAVE_ARTICLE:
