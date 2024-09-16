@@ -110,9 +110,17 @@ export const getSavedArticles = () =>
 export const searchSavedArticles = (query) =>
     apiCall('get', '/users/saved-articles/search', null, { query });
 
-export const saveArticle = (article) =>
-    apiCall('post', '/users/save-article', article);
-
+export const saveArticle = async (article) => {
+    try {
+        console.log('Saving article:', article);
+        const response = await apiCall('post', '/users/save-article', article);
+        console.log('Article saved successfully:', response);
+        return response;
+    } catch (error) {
+        console.error('Error saving article:', error.response?.data || error.message);
+        throw error;
+    }
+};
 export const unsaveArticle = (articleId) =>
     apiCall('delete', `/users/saved-articles/${articleId}`);
 
