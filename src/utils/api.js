@@ -81,8 +81,7 @@ export const logout = () => {
 
 // Articles
 export const getRecommendedArticles = (page = 1, limit = 20) =>
-    apiCall('get', `/articles/recommended`, null, { page, limit });
-
+    apiCall('get', '/articles/recommended', null, { page, limit });
 export const getAllArticles = (page = 1, limit = 20, category = '', search = '') =>
     apiCall('get', '/articles', null, { page, limit, category, search });
 
