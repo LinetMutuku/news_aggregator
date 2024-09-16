@@ -2,7 +2,7 @@ import React from 'react';
 import { SimpleGrid, Container, VStack, Text, Spinner, Center } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 
-const ArticleGrid = ({ articles, onSave, onRead, loading }) => {
+const ArticleGrid = React.memo(({ articles, onSave, onRead, loading }) => {
     console.log('ArticleGrid received articles:', articles);
 
     if (loading) {
@@ -26,21 +26,18 @@ const ArticleGrid = ({ articles, onSave, onRead, loading }) => {
         <Container maxW="container.xl" py={8}>
             <VStack spacing={8} align="stretch">
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={8}>
-                    {articles.map(article => {
-                        console.log('Rendering article:', article);
-                        return (
-                            <ArticleCard
-                                key={article._id || article.id || article.articleId}
-                                article={article}
-                                onSave={onSave}
-                                onRead={onRead}
-                            />
-                        );
-                    })}
+                    {articles.map(article => (
+                        <ArticleCard
+                            key={article._id || article.id || article.articleId}
+                            article={article}
+                            onSave={onSave}
+                            onRead={onRead}
+                        />
+                    ))}
                 </SimpleGrid>
             </VStack>
         </Container>
     );
-};
+});
 
 export default ArticleGrid;
