@@ -10,11 +10,11 @@ export const FETCH_SAVED_ARTICLES = 'FETCH_SAVED_ARTICLES';
 export const UNSAVE_ARTICLE = 'UNSAVE_ARTICLE';
 export const SEARCH_SAVED_ARTICLES = 'SEARCH_SAVED_ARTICLES';
 
-export const fetchArticles = (page) => async (dispatch) => {
-    console.log('fetchArticles action called with page:', page);
+export const fetchArticles = (page = 1, limit = 20) => async (dispatch) => {
+    console.log('fetchArticles action called with page:', page, 'limit:', limit);
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
-        const response = await api.getRecommendedArticles(page);
+        const response = await api.getRecommendedArticles(page, limit);
         console.log('API response received:', response);
         if (!Array.isArray(response.recommendations)) {
             throw new Error('Received invalid data structure from API');
@@ -22,7 +22,8 @@ export const fetchArticles = (page) => async (dispatch) => {
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
             payload: response.recommendations,
-            totalPages: response.totalPages
+            totalPages: response.totalPages,
+            currentPage: page
         });
     } catch (error) {
         console.error('Error in fetchArticles:', error);
@@ -34,18 +35,20 @@ export const fetchArticles = (page) => async (dispatch) => {
     }
 };
 
-export const searchArticlesAction = (query) => async (dispatch) => {
-    console.log('searchArticlesAction called with query:', query);
+export const searchArticlesAction = (query, page = 1, limit = 20) => async (dispatch) => {
+    console.log('searchArticlesAction called with query:', query, 'page:', page, 'limit:', limit);
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
-        const response = await api.searchArticles(query);
+        const response = await api.searchArticles(query, page, limit);
         console.log('Search API response received:', response);
         if (!Array.isArray(response.articles)) {
             throw new Error('Received invalid data structure from search API');
         }
         dispatch({
             type: SEARCH_ARTICLES,
-            payload: response.articles
+            payload: response.articles,
+            totalPages: response.totalPages,
+            currentPage: page
         });
     } catch (error) {
         console.error('Error in searchArticlesAction:', error);
