@@ -5,6 +5,7 @@ export const FETCH_ARTICLES_SUCCESS = 'FETCH_ARTICLES_SUCCESS';
 export const FETCH_ARTICLES_FAILURE = 'FETCH_ARTICLES_FAILURE';
 export const SEARCH_ARTICLES = 'SEARCH_ARTICLES';
 export const SAVE_ARTICLE = 'SAVE_ARTICLE';
+export const SAVE_ARTICLE_FAILURE = 'SAVE_ARTICLE_FAILURE';
 export const SET_SELECTED_ARTICLE = 'SET_SELECTED_ARTICLE';
 export const FETCH_SAVED_ARTICLES = 'FETCH_SAVED_ARTICLES';
 export const UNSAVE_ARTICLE = 'UNSAVE_ARTICLE';
@@ -64,13 +65,19 @@ export const saveArticleAction = (article) => async (dispatch) => {
     console.log('saveArticleAction called with article:', article);
     try {
         const savedArticle = await api.saveArticle(article);
-        console.log('Article saved:', savedArticle);
+        console.log('Article saved successfully:', savedArticle);
         dispatch({
             type: SAVE_ARTICLE,
             payload: savedArticle
         });
+        return savedArticle;
     } catch (error) {
         console.error('Error in saveArticleAction:', error);
+        console.error('Error details:', error.response?.data);
+        dispatch({
+            type: SAVE_ARTICLE_FAILURE,
+            payload: error.response?.data?.message || error.message || 'Failed to save article'
+        });
         throw error;
     }
 };

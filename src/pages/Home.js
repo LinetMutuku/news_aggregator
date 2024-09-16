@@ -78,7 +78,7 @@ function Home() {
             console.error('Error saving article:', error);
             toast({
                 title: "Error saving article",
-                description: error.message || "An unexpected error occurred. Please try again.",
+                description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
