@@ -2,7 +2,7 @@ import React from 'react';
 import { SimpleGrid, Container, VStack, Text, Spinner, Center } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 
-const ArticleGrid = React.memo(({ articles, onSave, onRead, loading }) => {
+const ArticleGrid = React.memo(({ articles, onSave, onRead, onUnsave, loading, showUnsaveButton }) => {
     console.log('ArticleGrid received articles:', articles);
 
     if (loading) {
@@ -32,6 +32,8 @@ const ArticleGrid = React.memo(({ articles, onSave, onRead, loading }) => {
                             article={article}
                             onSave={onSave}
                             onRead={onRead}
+                            onUnsave={onUnsave}
+                            showUnsaveButton={showUnsaveButton}
                         />
                     ))}
                 </SimpleGrid>
@@ -42,7 +44,9 @@ const ArticleGrid = React.memo(({ articles, onSave, onRead, loading }) => {
     return prevProps.loading === nextProps.loading &&
         prevProps.articles === nextProps.articles &&
         prevProps.onSave === nextProps.onSave &&
-        prevProps.onRead === nextProps.onRead;
+        prevProps.onRead === nextProps.onRead &&
+        prevProps.onUnsave === nextProps.onUnsave &&
+        prevProps.showUnsaveButton === nextProps.showUnsaveButton;
 });
 
 export default ArticleGrid;

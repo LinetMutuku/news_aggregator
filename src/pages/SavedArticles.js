@@ -71,15 +71,17 @@ function SavedArticles() {
                 await dispatch(unsaveArticleAction(articleToDelete.articleId));
                 toast({
                     title: "Article unsaved",
+                    description: "The article has been removed from your saved list.",
                     status: "success",
                     duration: 3000,
                     isClosable: true,
                 });
+                loadSavedArticles(); // Refresh the list of saved articles
             } catch (error) {
                 console.error('Error unsaving article:', error);
                 toast({
                     title: "Error unsaving article",
-                    description: "An unexpected error occurred. Please try again.",
+                    description: error.message || "An unexpected error occurred. Please try again.",
                     status: "error",
                     duration: 5000,
                     isClosable: true,
@@ -87,6 +89,7 @@ function SavedArticles() {
             }
         }
         setIsOpen(false);
+        setArticleToDelete(null);
     };
 
     const handleDeleteCancel = () => {
@@ -152,10 +155,10 @@ function SavedArticles() {
                             {savedArticles.length > 0 ? (
                                 <ArticleGrid
                                     articles={savedArticles}
-                                    onDelete={handleDeleteClick}
+                                    onUnsave={handleUnsave}
                                     onRead={handleReadArticle}
-                                    showDeleteButton={true}
-                                    deleteButtonColor="red.400"
+                                    loading={loading}
+                                    showUnsaveButton={true}
                                 />
                             ) : (
                                 <Text textAlign="center" fontSize="xl" color={textColor}>
