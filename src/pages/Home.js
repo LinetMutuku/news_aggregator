@@ -67,6 +67,9 @@ function Home() {
 
     const handleSaveArticle = useCallback(async (article) => {
         try {
+            if (!article || !article._id) {
+                throw new Error('Invalid article: Missing _id');
+            }
             await dispatch(saveArticleAction(article));
             toast({
                 title: "Article saved successfully",
@@ -86,13 +89,16 @@ function Home() {
         }
     }, [dispatch, toast]);
 
+
     const handleReadArticle = useCallback((article) => {
         dispatch(setSelectedArticle(article._id));
     }, [dispatch]);
 
+
     const handleLoadMore = useCallback(() => {
         debouncedFetchArticles(false);
     }, [debouncedFetchArticles]);
+
 
     const articleGridProps = useMemo(() => ({
         articles,
@@ -100,6 +106,7 @@ function Home() {
         onRead: handleReadArticle,
         loading,
     }), [articles, handleSaveArticle, handleReadArticle, loading]);
+
 
     if (loading && articles.length === 0) {
         return (
