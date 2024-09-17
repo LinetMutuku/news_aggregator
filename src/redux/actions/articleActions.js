@@ -150,7 +150,7 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
         console.error('Error unsaving article:', error);
         dispatch({
             type: UNSAVE_ARTICLE_FAILURE,
-            payload: error.message
+            payload: error.response?.data?.message || error.message || 'Failed to unsave article'
         });
         throw error;
     }

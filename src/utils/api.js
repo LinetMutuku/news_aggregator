@@ -129,9 +129,17 @@ export const saveArticle = async (article) => {
         throw error;
     }
 };
-export const unsaveArticle = (articleId) =>
-    apiCall('delete', `/users/saved-articles/${articleId}`);
-
+export const unsaveArticle = async (articleId) => {
+    console.log('Unsaving article with ID:', articleId);
+    try {
+        const response = await apiCall('delete', `/users/save-article/${articleId}`);
+        console.log('Article unsaved successfully:', response);
+        return response;
+    } catch (error) {
+        console.error('Error unsaving article:', error.response?.data || error.message);
+        throw error;
+    }
+};
 // User Profile
 export const getUserProfile = () =>
     apiCall('get', '/users/profile');
