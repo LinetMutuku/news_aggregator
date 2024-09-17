@@ -67,8 +67,8 @@ function Home() {
 
     const handleSaveArticle = useCallback(async (article) => {
         try {
-            if (!article || !article._id) {
-                throw new Error('Invalid article: Missing _id');
+            if (!article || !article._id || !article.title) {
+                throw new Error('Invalid article: Missing _id or title');
             }
             await dispatch(saveArticleAction(article));
             toast({
@@ -88,7 +88,6 @@ function Home() {
             });
         }
     }, [dispatch, toast]);
-
 
     const handleReadArticle = useCallback((article) => {
         dispatch(setSelectedArticle(article._id));
