@@ -110,10 +110,10 @@ export const getSavedArticles = () =>
 export const searchSavedArticles = (query) =>
     apiCall('get', '/users/saved-articles/search', null, { query });
 
-export const saveArticle = async (articleId) => {
-    console.log('Saving article with ID:', articleId);
+export const saveArticle = async (article) => {
+    console.log('Saving article:', article);
     try {
-        const response = await apiCall('post', '/users/save-article', { articleId });
+        const response = await apiCall('post', '/users/save-article', article);
         console.log('Article saved successfully:', response);
         return response;
     } catch (error) {
