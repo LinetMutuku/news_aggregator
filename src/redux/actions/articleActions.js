@@ -64,10 +64,10 @@ export const searchArticlesAction = (query, page = 1, limit = 20) => async (disp
 export const saveArticleAction = (article) => async (dispatch) => {
     console.log('saveArticleAction called with article:', article);
     try {
-        if (!article || !article._id) {
-            throw new Error('Invalid article object: Missing _id');
+        if (!article || !article._id || !article.title) {
+            throw new Error('Invalid article object: Missing _id or title');
         }
-        const savedArticle = await api.saveArticle(article._id);
+        const savedArticle = await api.saveArticle(article);
         console.log('Article saved successfully:', savedArticle);
         dispatch({
             type: SAVE_ARTICLE,
