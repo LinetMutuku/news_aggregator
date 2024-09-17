@@ -1,33 +1,19 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Box, VStack, Heading, Text, useToast, Spinner, Alert, AlertIcon,
-    AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
-    AlertDialogContent, AlertDialogOverlay, Button, Modal, ModalOverlay,
-    ModalContent, ModalBody, ModalCloseButton, Container, useColorModeValue,
-    Fade, Input, InputGroup, InputLeftElement
+    Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
-import ArticleDetail from '../components/ArticleDetail';
-import BackgroundCarousel from '../components/BackgroundCarousel';
-import { fetchSavedArticles, unsaveArticleAction, setSelectedArticle, searchSavedArticlesAction } from '../redux/actions/articleActions';
+import { fetchSavedArticles, unsaveArticleAction, searchSavedArticlesAction } from '../redux/actions/articleActions';
 import useDebounce from '../hooks/useDebounce';
-
-import backgroundImage1 from '../images/bg1.jpg';
-import backgroundImage2 from '../images/bg2.jpg';
-import backgroundImage3 from '../images/bg3.jpg';
-
-const backgroundImages = [backgroundImage1, backgroundImage2, backgroundImage3];
 
 function SavedArticles() {
     const dispatch = useDispatch();
-    const { savedArticles, loading, error, selectedArticle } = useSelector(state => state.articles);
-    const [isOpen, setIsOpen] = useState(false);
-    const [articleToDelete, setArticleToDelete] = useState(null);
+    const { savedArticles, loading, error } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
     const toast = useToast();
-    const cancelRef = useRef();
 
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -60,46 +46,28 @@ function SavedArticles() {
         }
     }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
-    const handleUnsave = useCallback((article) => {
-        setArticleToDelete(article);
-        setIsOpen(true);
-    }, []);
-
-    const handleDeleteConfirm = async () => {
-        if (articleToDelete) {
-            try {
-                await dispatch(unsaveArticleAction(articleToDelete.articleId));
-                toast({
-                    title: "Article unsaved",
-                    description: "The article has been removed from your saved list.",
-                    status: "success",
-                    duration: 3000,
-                    isClosable: true,
-                });
-                loadSavedArticles();
-            } catch (error) {
-                console.error('Error unsaving article:', error);
-                toast({
-                    title: "Error unsaving article",
-                    description: error.message || "An unexpected error occurred. Please try again.",
-                    status: "error",
-                    duration: 5000,
-                    isClosable: true,
-                });
-            }
+    const handleUnsave = useCallback(async (article) => {
+        try {
+            await dispatch(unsaveArticleAction(article._id));
+            toast({
+                title: "Article unsaved",
+                description: "The article has been removed from your saved list.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            loadSavedArticles();
+        } catch (error) {
+            console.error('Error unsaving article:', error);
+            toast({
+                title: "Error unsaving article",
+                description: error.message || "An unexpected error occurred. Please try again.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
         }
-        setIsOpen(false);
-        setArticleToDelete(null);
-    };
-
-    const handleDeleteCancel = () => {
-        setIsOpen(false);
-        setArticleToDelete(null);
-    };
-
-    const handleReadArticle = (article) => {
-        dispatch(setSelectedArticle(article.articleId));
-    };
+    }, [dispatch, loadSavedArticles, toast]);
 
     const handleClearSearch = () => {
         setSearchQuery('');
@@ -125,88 +93,41 @@ function SavedArticles() {
     }
 
     return (
-        <Box position="relative" minHeight="100vh">
-            <BackgroundCarousel images={backgroundImages} />
-            <Box bg="rgba(255, 255, 255, 0.8)" minHeight="100vh">
-                <Container maxW="container.xl">
-                    <VStack spacing={8} align="stretch">
-                        <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
-                            Your Saved Articles
-                        </Heading>
-                        <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
-                            Revisit and manage your curated collection of saved stories.
-                        </Text>
-                        <InputGroup>
-                            <InputLeftElement pointerEvents="none">
-                                <SearchIcon color="gray.300" />
-                            </InputLeftElement>
-                            <Input
-                                placeholder="Search saved articles"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                bg={inputBgColor}
+        <Box bg={bgColor} minHeight="100vh">
+            <Container maxW="container.xl">
+                <VStack spacing={8} align="stretch" py={8}>
+                    <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
+                        Your Saved Articles
+                    </Heading>
+                    <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
+                        Revisit and manage your curated collection of saved stories.
+                    </Text>
+                    <InputGroup>
+                        <InputLeftElement pointerEvents="none">
+                            <SearchIcon color="gray.300" />
+                        </InputLeftElement>
+                        <Input
+                            placeholder="Search saved articles"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            bg={inputBgColor}
+                        />
+                    </InputGroup>
+                    <Fade in={true}>
+                        {savedArticles.length > 0 ? (
+                            <ArticleGrid
+                                articles={savedArticles}
+                                onUnsave={handleUnsave}
+                                showUnsaveButton={true}
                             />
-                            {searchQuery && (
-                                <Button ml={2} onClick={handleClearSearch}>
-                                    Clear
-                                </Button>
-                            )}
-                        </InputGroup>
-                        <Fade in={true}>
-                            {savedArticles.length > 0 ? (
-                                <ArticleGrid
-                                    articles={savedArticles}
-                                    onUnsave={handleUnsave}
-                                    onRead={handleReadArticle}
-                                    loading={loading}
-                                    showUnsaveButton={true}
-                                />
-                            ) : (
-                                <Text textAlign="center" fontSize="xl" color={textColor}>
-                                    {searchQuery ? "No articles match your search." : "You haven't saved any articles yet."}
-                                </Text>
-                            )}
-                        </Fade>
-                    </VStack>
-                </Container>
-
-                <AlertDialog
-                    isOpen={isOpen}
-                    leastDestructiveRef={cancelRef}
-                    onClose={handleDeleteCancel}
-                >
-                    <AlertDialogOverlay>
-                        <AlertDialogContent>
-                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                                Unsave Article
-                            </AlertDialogHeader>
-
-                            <AlertDialogBody>
-                                Are you sure you want to unsave this article? This action cannot be undone.
-                            </AlertDialogBody>
-
-                            <AlertDialogFooter>
-                                <Button ref={cancelRef} onClick={handleDeleteCancel}>
-                                    Cancel
-                                </Button>
-                                <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3}>
-                                    Unsave
-                                </Button>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialogOverlay>
-                </AlertDialog>
-
-                <Modal isOpen={!!selectedArticle} onClose={() => dispatch(setSelectedArticle(null))} size="xl" scrollBehavior="inside">
-                    <ModalOverlay />
-                    <ModalContent maxH="90vh" bg={bgColor}>
-                        <ModalCloseButton />
-                        <ModalBody p={0}>
-                            {selectedArticle && <ArticleDetail article={selectedArticle} />}
-                        </ModalBody>
-                    </ModalContent>
-                </Modal>
-            </Box>
+                        ) : (
+                            <Text textAlign="center" fontSize="xl" color={textColor}>
+                                {searchQuery ? "No articles match your search." : "You haven't saved any articles yet."}
+                            </Text>
+                        )}
+                    </Fade>
+                </VStack>
+            </Container>
         </Box>
     );
 }

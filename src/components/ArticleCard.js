@@ -28,6 +28,9 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
     const sourceName = article.source?.name || article.source || 'Unknown Source';
     const publishDate = article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Date unknown';
 
+    const buttonText = showDeleteButton ? "Unsave" : (article.isSaved ? "Saved" : "Save");
+    const buttonColorScheme = showDeleteButton ? "red" : "blue";
+
     return (
         <MotionBox
             borderWidth="1px"
@@ -59,11 +62,11 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
                     {(onSave || showDeleteButton) && (
                         <Button
                             size="sm"
-                            colorScheme={showDeleteButton ? "red" : "blue"}
+                            colorScheme={buttonColorScheme}
                             onClick={handleAction}
                             variant="outline"
                         >
-                            {showDeleteButton ? "Unsave" : (article.isSaved ? "Saved" : "Save")}
+                            {buttonText}
                         </Button>
                     )}
                 </Flex>

@@ -32,8 +32,8 @@ const ArticleGrid = React.memo(({ articles, onSave, onRead, onUnsave, loading, s
                             article={article}
                             onSave={onSave}
                             onRead={onRead}
-                            onUnsave={onUnsave}
-                            showUnsaveButton={showUnsaveButton}
+                            onDelete={onUnsave}
+                            showDeleteButton={showUnsaveButton}
                         />
                     ))}
                 </SimpleGrid>
