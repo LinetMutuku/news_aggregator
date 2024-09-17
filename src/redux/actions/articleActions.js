@@ -88,6 +88,14 @@ export const saveArticleAction = (article) => async (dispatch) => {
 export const setSelectedArticle = (articleId) => async (dispatch) => {
     console.log('setSelectedArticle called with id:', articleId);
     try {
+        if (!articleId) {
+            console.warn('Attempted to set selected article with null/undefined id');
+            dispatch({
+                type: SET_SELECTED_ARTICLE,
+                payload: null
+            });
+            return;
+        }
         const article = await api.getArticleById(articleId);
         console.log('Selected article details:', article);
         dispatch({
@@ -96,7 +104,10 @@ export const setSelectedArticle = (articleId) => async (dispatch) => {
         });
     } catch (error) {
         console.error('Error in setSelectedArticle:', error);
-        throw error;
+        dispatch({
+            type: SET_SELECTED_ARTICLE,
+            payload: null
+        });
     }
 };
 

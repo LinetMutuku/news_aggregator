@@ -86,8 +86,13 @@ export const getRecommendedArticles = (page = 1, limit = 20) =>
 export const getAllArticles = (page = 1, limit = 20, category = '', search = '') =>
     apiCall('get', '/articles', null, { page, limit, category, search });
 
-export const getArticleById = (id) =>
-    apiCall('get', `/articles/${id}`);
+export const getArticleById = async (id) => {
+    if (!id) {
+        console.warn('Attempted to get article with null/undefined id');
+        return null;
+    }
+    return await apiCall('get', `/articles/${id}`);
+};
 
 export const markArticleAsRead = (articleId) =>
     apiCall('post', `/articles/${articleId}/read`);
@@ -113,10 +118,7 @@ export const searchSavedArticles = (query) =>
 export const saveArticle = async (article) => {
     console.log('Saving article:', article);
     try {
-        const response = await apiCall('post', '/users/save-article', {
-            articleId: article._id,
-            title: article.title
-        });
+        const response = await apiCall('post', '/users/save-article', { article });
         console.log('Article saved successfully:', response);
         return response;
     } catch (error) {
@@ -124,7 +126,6 @@ export const saveArticle = async (article) => {
         throw error;
     }
 };
-
 export const unsaveArticle = (articleId) =>
     apiCall('delete', `/users/saved-articles/${articleId}`);
 
