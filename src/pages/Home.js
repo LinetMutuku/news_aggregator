@@ -36,6 +36,7 @@ function Home() {
         [dispatch, page, toast]
     );
 
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -67,8 +68,8 @@ function Home() {
 
     const handleSaveArticle = useCallback(async (article) => {
         try {
-            if (!article || !article._id) {
-                throw new Error('Invalid article: Missing _id');
+            if (!article || !article._id || !article.title) {
+                throw new Error('Invalid article: Missing _id or title');
             }
             await dispatch(saveArticleAction(article));
             toast({
