@@ -1,6 +1,6 @@
 import * as api from '../../utils/api';
 
-
+// Action Types
 export const FETCH_ARTICLES_REQUEST = 'FETCH_ARTICLES_REQUEST';
 export const FETCH_ARTICLES_SUCCESS = 'FETCH_ARTICLES_SUCCESS';
 export const FETCH_ARTICLES_FAILURE = 'FETCH_ARTICLES_FAILURE';
@@ -138,6 +138,7 @@ export const fetchSavedArticles = () => async (dispatch) => {
 };
 
 export const unsaveArticleAction = (articleId) => async (dispatch) => {
+    console.log('unsaveArticleAction called with id:', articleId);
     try {
         await api.unsaveArticle(articleId);
         dispatch({

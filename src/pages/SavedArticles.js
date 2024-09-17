@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Box, VStack, Heading, Text, useToast, Spinner, Alert, AlertIcon,
@@ -23,13 +23,13 @@ const backgroundImages = [backgroundImage1, backgroundImage2, backgroundImage3];
 function SavedArticles() {
     const dispatch = useDispatch();
     const { savedArticles, loading, error, selectedArticle } = useSelector(state => state.articles);
-    const [isOpen, setIsOpen] = React.useState(false);
-    const [articleToDelete, setArticleToDelete] = React.useState(null);
-    const [searchQuery, setSearchQuery] = React.useState('');
+    const [isOpen, setIsOpen] = useState(false);
+    const [articleToDelete, setArticleToDelete] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const toast = useToast();
     const cancelRef = useRef();
 
-    const debouncedSearchQuery = useDebounce(searchQuery);
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -60,10 +60,10 @@ function SavedArticles() {
         }
     }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
-    const handleDeleteClick = (article) => {
+    const handleUnsave = useCallback((article) => {
         setArticleToDelete(article);
         setIsOpen(true);
-    };
+    }, []);
 
     const handleDeleteConfirm = async () => {
         if (articleToDelete) {
@@ -76,7 +76,7 @@ function SavedArticles() {
                     duration: 3000,
                     isClosable: true,
                 });
-                loadSavedArticles(); // Refresh the list of saved articles
+                loadSavedArticles();
             } catch (error) {
                 console.error('Error unsaving article:', error);
                 toast({
@@ -94,6 +94,7 @@ function SavedArticles() {
 
     const handleDeleteCancel = () => {
         setIsOpen(false);
+        setArticleToDelete(null);
     };
 
     const handleReadArticle = (article) => {
@@ -105,7 +106,7 @@ function SavedArticles() {
         loadSavedArticles();
     };
 
-    if (loading) {
+    if (loading && savedArticles.length === 0) {
         return (
             <Box textAlign="center" py={10} bg={bgColor} minH="100vh">
                 <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
