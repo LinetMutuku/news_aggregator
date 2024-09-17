@@ -61,29 +61,30 @@ export const searchArticlesAction = (query, page = 1, limit = 20) => async (disp
     }
 };
 
+
 export const saveArticleAction = (article) => async (dispatch) => {
-    console.log('saveArticleAction called with article:', article);
-    try {
-        if (!article || !article._id || !article.title) {
-            throw new Error('Invalid article object: Missing _id or title');
-        }
-        const savedArticle = await api.saveArticle(article);
-        console.log('Article saved successfully:', savedArticle);
-        dispatch({
-            type: SAVE_ARTICLE,
-            payload: savedArticle
-        });
-        return savedArticle;
-    } catch (error) {
-        console.error('Error in saveArticleAction:', error);
-        console.error('Error details:', error.response?.data);
-        dispatch({
-            type: SAVE_ARTICLE_FAILURE,
-            payload: error.response?.data?.message || error.message || 'Failed to save article'
-        });
-        throw error;
-    }
-};
+            console.log('saveArticleAction called with article:', article);
+            try {
+                if (!article || !article._id) {
+                    throw new Error('Invalid article object: Missing _id');
+                }
+                const savedArticle = await api.saveArticle(article);
+                console.log('Article saved successfully:', savedArticle);
+                dispatch({
+                    type: SAVE_ARTICLE,
+                    payload: savedArticle
+                });
+                return savedArticle;
+            } catch (error) {
+                console.error('Error in saveArticleAction:', error);
+                console.error('Error details:', error.response?.data);
+                dispatch({
+                    type: SAVE_ARTICLE_FAILURE,
+                    payload: error.response?.data?.message || error.message || 'Failed to save article'
+                });
+                throw error;
+            }
+        };
 
 export const setSelectedArticle = (articleId) => async (dispatch) => {
     console.log('setSelectedArticle called with id:', articleId);
