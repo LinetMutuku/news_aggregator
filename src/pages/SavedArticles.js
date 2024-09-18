@@ -46,9 +46,10 @@ function SavedArticles() {
         }
     }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
-    const handleUnsave = useCallback(async (article) => {
+    const handleUnsave = useCallback(async (articleId) => {
+        console.log('Attempting to unsave article with ID:', articleId);
         try {
-            await dispatch(unsaveArticleAction(article._id));
+            await dispatch(unsaveArticleAction(articleId));
             toast({
                 title: "Article unsaved",
                 description: "The article has been removed from your saved list.",
@@ -61,13 +62,15 @@ function SavedArticles() {
             console.error('Error unsaving article:', error);
             toast({
                 title: "Error unsaving article",
-                description: error.message || "An unexpected error occurred. Please try again.",
+                description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
             });
         }
     }, [dispatch, loadSavedArticles, toast]);
+
+
 
     const handleClearSearch = () => {
         setSearchQuery('');

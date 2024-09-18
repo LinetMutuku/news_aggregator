@@ -18,7 +18,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
     const handleAction = (e) => {
         e.stopPropagation();
         if (showDeleteButton && onDelete) {
-            onDelete(article);
+            onDelete(article.articleId || article._id);
         } else if (onSave) {
             onSave(article);
         }

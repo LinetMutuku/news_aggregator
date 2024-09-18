@@ -140,7 +140,8 @@ export const fetchSavedArticles = () => async (dispatch) => {
 export const unsaveArticleAction = (articleId) => async (dispatch) => {
     console.log('unsaveArticleAction called with id:', articleId);
     try {
-        await api.unsaveArticle(articleId);
+        const response = await api.unsaveArticle(articleId);
+        console.log('Unsave response:', response);
         dispatch({
             type: UNSAVE_ARTICLE,
             payload: articleId
@@ -148,6 +149,7 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
         return { success: true };
     } catch (error) {
         console.error('Error unsaving article:', error);
+        console.error('Error details:', error.response?.data);
         dispatch({
             type: UNSAVE_ARTICLE_FAILURE,
             payload: error.response?.data?.message || error.message || 'Failed to unsave article'
@@ -155,6 +157,7 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
         throw error;
     }
 };
+
 
 export const searchSavedArticlesAction = (query) => async (dispatch) => {
     console.log('searchSavedArticlesAction called with query:', query);

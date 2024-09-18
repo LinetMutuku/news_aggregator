@@ -129,6 +129,7 @@ export const saveArticle = async (article) => {
         throw error;
     }
 };
+
 export const unsaveArticle = async (articleId) => {
     console.log('Unsaving article with ID:', articleId);
     try {
@@ -140,6 +141,7 @@ export const unsaveArticle = async (articleId) => {
         throw error;
     }
 };
+
 // User Profile
 export const getUserProfile = () =>
     apiCall('get', '/users/profile');
