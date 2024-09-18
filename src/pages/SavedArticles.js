@@ -1,8 +1,10 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Box, VStack, Heading, Text, useToast, Spinner, Alert, AlertIcon,
-    Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement
+    Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement,
+    AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
+    AlertDialogContent, AlertDialogOverlay, Button
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
@@ -13,7 +15,10 @@ function SavedArticles() {
     const dispatch = useDispatch();
     const { savedArticles, loading, error } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+    const [articleToUnsave, setArticleToUnsave] = useState(null);
     const toast = useToast();
+    const cancelRef = useRef();
 
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -46,36 +51,43 @@ function SavedArticles() {
         }
     }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
-    const handleUnsave = useCallback(async (articleId) => {
-        console.log('Attempting to unsave article with ID:', articleId);
-        try {
-            await dispatch(unsaveArticleAction(articleId));
-            toast({
-                title: "Article unsaved",
-                description: "The article has been removed from your saved list.",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-            loadSavedArticles();
-        } catch (error) {
-            console.error('Error unsaving article:', error);
-            toast({
-                title: "Error unsaving article",
-                description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
+    const handleUnsave = useCallback((articleId) => {
+        setArticleToUnsave(articleId);
+        setIsOpen(true);
+    }, []);
+
+    const handleUnsaveConfirm = async () => {
+        if (articleToUnsave) {
+            try {
+                await dispatch(unsaveArticleAction(articleToUnsave));
+                toast({
+                    title: "Article unsaved",
+                    description: "Article successfully unsaved",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                loadSavedArticles();
+            } catch (error) {
+                console.error('Error unsaving article:', error);
+                toast({
+                    title: "Error unsaving article",
+                    description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
         }
-    }, [dispatch, loadSavedArticles, toast]);
-
-
-
-    const handleClearSearch = () => {
-        setSearchQuery('');
-        loadSavedArticles();
+        setIsOpen(false);
+        setArticleToUnsave(null);
     };
+
+    const handleUnsaveCancel = () => {
+        setIsOpen(false);
+        setArticleToUnsave(null);
+    };
+
 
     if (loading && savedArticles.length === 0) {
         return (
@@ -131,6 +143,33 @@ function SavedArticles() {
                     </Fade>
                 </VStack>
             </Container>
+
+            <AlertDialog
+                isOpen={isOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={handleUnsaveCancel}
+            >
+                <AlertDialogOverlay>
+                    <AlertDialogContent>
+                        <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                            Unsave Article
+                        </AlertDialogHeader>
+
+                        <AlertDialogBody>
+                            Are you sure you want to unsave this article? This action cannot be undone.
+                        </AlertDialogBody>
+
+                        <AlertDialogFooter>
+                            <Button ref={cancelRef} onClick={handleUnsaveCancel}>
+                                Cancel
+                            </Button>
+                            <Button colorScheme="red" onClick={handleUnsaveConfirm} ml={3}>
+                                Unsave
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
         </Box>
     );
 }
