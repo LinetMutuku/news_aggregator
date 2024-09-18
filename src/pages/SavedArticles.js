@@ -54,15 +54,15 @@ function SavedArticles() {
         }
     }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
-    const handleUnsave = useCallback((articleId) => {
-        setArticleToUnsave(articleId);
+    const handleUnsave = useCallback((article) => {
+        setArticleToUnsave(article);
         setIsDeleteDialogOpen(true);
     }, []);
 
     const handleUnsaveConfirm = async () => {
         if (articleToUnsave) {
             try {
-                await dispatch(unsaveArticleAction(articleToUnsave));
+                await dispatch(unsaveArticleAction(articleToUnsave._id));
                 toast({
                     title: "Article unsaved",
                     description: "Article successfully removed from your saved list",
@@ -73,24 +73,13 @@ function SavedArticles() {
                 loadSavedArticles();
             } catch (error) {
                 console.error('Error unsaving article:', error);
-                if (error.response && error.response.status === 404) {
-                    toast({
-                        title: "Article not found",
-                        description: "This article may have already been unsaved. Refreshing your saved articles.",
-                        status: "info",
-                        duration: 5000,
-                        isClosable: true,
-                    });
-                    loadSavedArticles();
-                } else {
-                    toast({
-                        title: "Error unsaving article",
-                        description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
-                        status: "error",
-                        duration: 5000,
-                        isClosable: true,
-                    });
-                }
+                toast({
+                    title: "Error unsaving article",
+                    description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
             }
         }
         setIsDeleteDialogOpen(false);
@@ -103,7 +92,7 @@ function SavedArticles() {
     };
 
     const handleReadArticle = useCallback((article) => {
-        dispatch(setSelectedArticle(article));
+        dispatch(setSelectedArticle(article._id));
         setIsModalOpen(true);
     }, [dispatch]);
 
@@ -117,21 +106,12 @@ function SavedArticles() {
         loadSavedArticles();
     };
 
-    if (loading && savedArticles.length === 0) {
+    if (loading && (!savedArticles || savedArticles.length === 0)) {
         return (
             <Box textAlign="center" py={10} bg={bgColor} minH="100vh">
                 <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
                 <Text mt={4} color={textColor}>Loading saved articles...</Text>
             </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Alert status="error">
-                <AlertIcon />
-                {error}
-            </Alert>
         );
     }
 
@@ -162,18 +142,13 @@ function SavedArticles() {
                         )}
                     </InputGroup>
                     <Fade in={true}>
-                        {savedArticles.length > 0 ? (
-                            <ArticleGrid
-                                articles={savedArticles}
-                                onUnsave={handleUnsave}
-                                onRead={handleReadArticle}
-                                showUnsaveButton={true}
-                            />
-                        ) : (
-                            <Text textAlign="center" fontSize="xl" color={textColor}>
-                                {searchQuery ? "No articles match your search." : "You haven't saved any articles yet."}
-                            </Text>
-                        )}
+                        <ArticleGrid
+                            articles={savedArticles}
+                            onUnsave={handleUnsave}
+                            onRead={handleReadArticle}
+                            showUnsaveButton={true}
+                            loading={loading}
+                        />
                     </Fade>
                 </VStack>
             </Container>

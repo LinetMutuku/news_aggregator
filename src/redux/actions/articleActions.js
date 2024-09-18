@@ -146,6 +146,8 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
             type: UNSAVE_ARTICLE,
             payload: articleId
         });
+        // Fetch updated saved articles list
+        dispatch(fetchSavedArticles());
         return { success: true };
     } catch (error) {
         console.error('Error unsaving article:', error);
@@ -156,6 +158,8 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
                 type: UNSAVE_ARTICLE,
                 payload: articleId
             });
+            // Fetch updated saved articles list
+            dispatch(fetchSavedArticles());
             return { success: true };
         }
         dispatch({
