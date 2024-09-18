@@ -17,7 +17,7 @@ function SavedArticles() {
     const dispatch = useDispatch();
     const { savedArticles, loading, error, selectedArticle } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isOpen, setIsOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const toast = useToast();
@@ -56,7 +56,7 @@ function SavedArticles() {
 
     const handleUnsave = useCallback((articleId) => {
         setArticleToUnsave(articleId);
-        setIsOpen(true);
+        setIsDeleteDialogOpen(true);
     }, []);
 
     const handleUnsaveConfirm = async () => {
@@ -65,7 +65,7 @@ function SavedArticles() {
                 await dispatch(unsaveArticleAction(articleToUnsave));
                 toast({
                     title: "Article unsaved",
-                    description: "Article successfully unsaved",
+                    description: "Article successfully removed from your saved list",
                     status: "success",
                     duration: 3000,
                     isClosable: true,
@@ -73,26 +73,37 @@ function SavedArticles() {
                 loadSavedArticles();
             } catch (error) {
                 console.error('Error unsaving article:', error);
-                toast({
-                    title: "Error unsaving article",
-                    description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
-                    status: "error",
-                    duration: 5000,
-                    isClosable: true,
-                });
+                if (error.response && error.response.status === 404) {
+                    toast({
+                        title: "Article not found",
+                        description: "This article may have already been unsaved. Refreshing your saved articles.",
+                        status: "info",
+                        duration: 5000,
+                        isClosable: true,
+                    });
+                    loadSavedArticles();
+                } else {
+                    toast({
+                        title: "Error unsaving article",
+                        description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
+                        status: "error",
+                        duration: 5000,
+                        isClosable: true,
+                    });
+                }
             }
         }
-        setIsOpen(false);
+        setIsDeleteDialogOpen(false);
         setArticleToUnsave(null);
     };
 
     const handleUnsaveCancel = () => {
-        setIsOpen(false);
+        setIsDeleteDialogOpen(false);
         setArticleToUnsave(null);
     };
 
     const handleReadArticle = useCallback((article) => {
-        dispatch(setSelectedArticle(article._id));
+        dispatch(setSelectedArticle(article));
         setIsModalOpen(true);
     }, [dispatch]);
 
@@ -101,6 +112,10 @@ function SavedArticles() {
         dispatch(setSelectedArticle(null));
     }, [dispatch]);
 
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        loadSavedArticles();
+    };
 
     if (loading && savedArticles.length === 0) {
         return (
@@ -140,6 +155,11 @@ function SavedArticles() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             bg={inputBgColor}
                         />
+                        {searchQuery && (
+                            <Button ml={2} onClick={handleClearSearch}>
+                                Clear
+                            </Button>
+                        )}
                     </InputGroup>
                     <Fade in={true}>
                         {savedArticles.length > 0 ? (
@@ -159,7 +179,7 @@ function SavedArticles() {
             </Container>
 
             <AlertDialog
-                isOpen={isOpen}
+                isOpen={isDeleteDialogOpen}
                 leastDestructiveRef={cancelRef}
                 onClose={handleUnsaveCancel}
             >

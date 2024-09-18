@@ -150,6 +150,14 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
     } catch (error) {
         console.error('Error unsaving article:', error);
         console.error('Error details:', error.response?.data);
+        if (error.response && error.response.status === 404) {
+            // If the article is not found, we consider it as already unsaved
+            dispatch({
+                type: UNSAVE_ARTICLE,
+                payload: articleId
+            });
+            return { success: true };
+        }
         dispatch({
             type: UNSAVE_ARTICLE_FAILURE,
             payload: error.response?.data?.message || error.message || 'Failed to unsave article'
