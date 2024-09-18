@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
     Box, VStack, Heading, Spinner, useToast, Container, Text, Button,
-    Center, Alert, AlertIcon, AlertTitle, AlertDescription
+    Center, Alert, AlertIcon, AlertTitle, AlertDescription, Modal, ModalOverlay,
+    ModalContent, ModalCloseButton, ModalBody
 } from "@chakra-ui/react";
 import { fetchArticles, searchArticlesAction, saveArticleAction, setSelectedArticle } from '../redux/actions/articleActions';
 import Search from '../components/Search';
@@ -18,6 +19,7 @@ function Home() {
     const { articles, loading, error, hasMore, page, selectedArticle } = useSelector(state => state.articles);
     const toast = useToast();
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const debouncedFetchArticles = useCallback(
         debounce((isInitial) => {
@@ -35,7 +37,6 @@ function Home() {
         }, 300),
         [dispatch, page, toast]
     );
-
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -68,9 +69,6 @@ function Home() {
 
     const handleSaveArticle = useCallback(async (article) => {
         try {
-            if (!article || !article._id || !article.title) {
-                throw new Error('Invalid article: Missing _id or title');
-            }
             await dispatch(saveArticleAction(article));
             toast({
                 title: "Article saved successfully",
@@ -90,16 +88,19 @@ function Home() {
         }
     }, [dispatch, toast]);
 
-
     const handleReadArticle = useCallback((article) => {
         dispatch(setSelectedArticle(article._id));
+        setIsModalOpen(true);
     }, [dispatch]);
 
+    const handleCloseModal = useCallback(() => {
+        setIsModalOpen(false);
+        dispatch(setSelectedArticle(null));
+    }, [dispatch]);
 
     const handleLoadMore = useCallback(() => {
         debouncedFetchArticles(false);
     }, [debouncedFetchArticles]);
-
 
     const articleGridProps = useMemo(() => ({
         articles,
@@ -107,7 +108,6 @@ function Home() {
         onRead: handleReadArticle,
         loading,
     }), [articles, handleSaveArticle, handleReadArticle, loading]);
-
 
     if (loading && articles.length === 0) {
         return (
@@ -157,9 +157,15 @@ function Home() {
                     </VStack>
                 </Container>
 
-                {selectedArticle && (
-                    <ArticleDetail article={selectedArticle} onClose={() => dispatch(setSelectedArticle(null))} />
-                )}
+                <Modal isOpen={isModalOpen && selectedArticle} onClose={handleCloseModal} size="xl">
+                    <ModalOverlay />
+                    <ModalContent maxW="800px">
+                        <ModalCloseButton />
+                        <ModalBody p={0}>
+                            {selectedArticle && <ArticleDetail article={selectedArticle} />}
+                        </ModalBody>
+                    </ModalContent>
+                </Modal>
             </Box>
         </ErrorBoundary>
     );

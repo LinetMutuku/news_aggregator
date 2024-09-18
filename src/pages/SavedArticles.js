@@ -4,19 +4,22 @@ import {
     Box, VStack, Heading, Text, useToast, Spinner, Alert, AlertIcon,
     Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement,
     AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
-    AlertDialogContent, AlertDialogOverlay, Button
+    AlertDialogContent, AlertDialogOverlay, Button, Modal, ModalOverlay,
+    ModalContent, ModalCloseButton, ModalBody
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
-import { fetchSavedArticles, unsaveArticleAction, searchSavedArticlesAction } from '../redux/actions/articleActions';
+import ArticleDetail from '../components/ArticleDetail';
+import { fetchSavedArticles, unsaveArticleAction, searchSavedArticlesAction, setSelectedArticle } from '../redux/actions/articleActions';
 import useDebounce from '../hooks/useDebounce';
 
 function SavedArticles() {
     const dispatch = useDispatch();
-    const { savedArticles, loading, error } = useSelector(state => state.articles);
+    const { savedArticles, loading, error, selectedArticle } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const toast = useToast();
     const cancelRef = useRef();
 
@@ -88,6 +91,16 @@ function SavedArticles() {
         setArticleToUnsave(null);
     };
 
+    const handleReadArticle = useCallback((article) => {
+        dispatch(setSelectedArticle(article._id));
+        setIsModalOpen(true);
+    }, [dispatch]);
+
+    const handleCloseModal = useCallback(() => {
+        setIsModalOpen(false);
+        dispatch(setSelectedArticle(null));
+    }, [dispatch]);
+
 
     if (loading && savedArticles.length === 0) {
         return (
@@ -133,6 +146,7 @@ function SavedArticles() {
                             <ArticleGrid
                                 articles={savedArticles}
                                 onUnsave={handleUnsave}
+                                onRead={handleReadArticle}
                                 showUnsaveButton={true}
                             />
                         ) : (
@@ -170,6 +184,16 @@ function SavedArticles() {
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
+
+            <Modal isOpen={isModalOpen && selectedArticle} onClose={handleCloseModal} size="xl">
+                <ModalOverlay />
+                <ModalContent maxW="800px">
+                    <ModalCloseButton />
+                    <ModalBody p={0}>
+                        {selectedArticle && <ArticleDetail article={selectedArticle} />}
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }

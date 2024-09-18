@@ -18,7 +18,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
     const handleAction = (e) => {
         e.stopPropagation();
         if (showDeleteButton && onDelete) {
-            onDelete(article.articleId || article._id);
+            onDelete(article._id);
         } else if (onSave) {
             onSave(article);
         }
@@ -40,7 +40,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
             bg={bgColor}
             whileHover={{ y: -5, boxShadow: "xl" }}
             transition={{ duration: 0.3 }}
-            onClick={() => onRead(article)}
+            onClick={() => onRead && onRead(article)}
             cursor="pointer"
             height="100%"
             display="flex"
