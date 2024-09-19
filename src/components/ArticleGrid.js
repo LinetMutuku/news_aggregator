@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { SimpleGrid, Container, VStack, Text, Spinner, Center } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 
 const ArticleGrid = React.memo(({ articles, onSave, onRead, onUnsave, loading, showUnsaveButton }) => {
     console.log('ArticleGrid received articles:', articles);
+
+    const handleUnsave = useCallback((article) => {
+        if (article && (article._id || article.articleId)) {
+            onUnsave(article);
+        } else {
+            console.error('Attempted to unsave an article with missing or invalid ID:', article);
+        }
+    }, [onUnsave]);
 
     if (loading) {
         return (
@@ -28,11 +36,11 @@ const ArticleGrid = React.memo(({ articles, onSave, onRead, onUnsave, loading, s
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={8}>
                     {articles.map(article => (
                         <ArticleCard
-                            key={article._id || article.id || article.articleId}
+                            key={article._id || article.articleId}
                             article={article}
                             onSave={onSave}
                             onRead={onRead}
-                            onDelete={onUnsave}
+                            onDelete={() => handleUnsave(article)}
                             showDeleteButton={showUnsaveButton}
                         />
                     ))}

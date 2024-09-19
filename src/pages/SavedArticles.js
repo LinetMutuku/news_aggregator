@@ -34,9 +34,11 @@ function SavedArticles() {
         dispatch(fetchSavedArticles());
     }, [dispatch]);
 
+
     useEffect(() => {
         loadSavedArticles();
     }, [loadSavedArticles]);
+
 
     const handleSearch = useCallback((query) => {
         if (!query.trim()) {
@@ -54,23 +56,41 @@ function SavedArticles() {
         }
     }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
+
+
+
+
     const handleUnsave = useCallback((article) => {
-        setArticleToUnsave(article);
-        setIsDeleteDialogOpen(true);
-    }, []);
+        if (article && article._id) {
+            setArticleToUnsave(article);
+            setIsDeleteDialogOpen(true);
+        } else {
+            console.error('Attempted to unsave an article with missing or invalid ID:', article);
+            toast({
+                title: "Error",
+                description: "Unable to unsave this article due to a missing or invalid ID.",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+    }, [toast]);
 
     const handleUnsaveConfirm = async () => {
-        if (articleToUnsave) {
+        if (articleToUnsave && articleToUnsave._id) {
             try {
-                await dispatch(unsaveArticleAction(articleToUnsave._id));
-                toast({
-                    title: "Article unsaved",
-                    description: "Article successfully removed from your saved list",
-                    status: "success",
-                    duration: 3000,
-                    isClosable: true,
-                });
-                loadSavedArticles();
+                const result = await dispatch(unsaveArticleAction(articleToUnsave._id));
+                if (result.success) {
+                    // Immediately update the local state
+                    setSavedArticles(prevArticles => prevArticles.filter(article => article._id !== articleToUnsave._id));
+                    toast({
+                        title: "Article unsaved",
+                        description: result.message || "Article successfully removed from your saved list",
+                        status: "success",
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                }
             } catch (error) {
                 console.error('Error unsaving article:', error);
                 toast({
@@ -81,10 +101,22 @@ function SavedArticles() {
                     isClosable: true,
                 });
             }
+        } else {
+            console.error('No article to unsave or article ID is undefined', articleToUnsave);
+            toast({
+                title: "Error",
+                description: "Unable to unsave this article due to a missing or invalid ID.",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
         }
         setIsDeleteDialogOpen(false);
         setArticleToUnsave(null);
     };
+
+
+
 
     const handleUnsaveCancel = () => {
         setIsDeleteDialogOpen(false);

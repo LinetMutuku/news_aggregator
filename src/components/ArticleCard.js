@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Image, Badge, Text, Heading, Flex, Button, useColorModeValue } from "@chakra-ui/react";
+import { Box, Image, Badge, Text, Heading, Flex, Button, useColorModeValue, useToast } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
@@ -9,6 +9,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
     const textColor = useColorModeValue('gray.700', 'gray.100');
     const descriptionColor = useColorModeValue('gray.600', 'gray.300');
     const sourceColor = useColorModeValue('gray.500', 'gray.400');
+    const toast = useToast();
 
     if (!article) {
         console.error('ArticleCard received undefined article');
@@ -18,7 +19,18 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
     const handleAction = (e) => {
         e.stopPropagation();
         if (showDeleteButton && onDelete) {
-            onDelete(article._id);
+            if (article._id || article.articleId) {
+                onDelete(article);
+            } else {
+                console.error('Attempted to delete an article with missing ID:', article);
+                toast({
+                    title: "Error",
+                    description: "Unable to unsave this article due to a missing ID.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
         } else if (onSave) {
             onSave(article);
         }

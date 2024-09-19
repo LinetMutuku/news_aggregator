@@ -45,12 +45,7 @@ api.interceptors.response.use((response) => {
 // Helper function for API calls
 const apiCall = async (method, url, data = null, params = null) => {
     try {
-        const response = await api({
-            method,
-            url,
-            data,
-            params
-        });
+        const response = await api({ method, url, data, params });
         return response.data;
     } catch (error) {
         console.error(`Error in ${method.toUpperCase()} ${url}:`, error);
@@ -80,11 +75,9 @@ export const logout = () => {
 };
 
 // Articles
-export const getRecommendedArticles = (page = 1, limit = 20) =>
-    apiCall('get', '/articles/recommended', null, { page, limit });
+export const getRecommendedArticles = (page = 1, limit = 20) => apiCall('get', '/articles/recommended', null, { page, limit });
 
-export const getAllArticles = (page = 1, limit = 20, category = '', search = '') =>
-    apiCall('get', '/articles', null, { page, limit, category, search });
+export const getAllArticles = (page = 1, limit = 20, category = '', search = '') => apiCall('get', '/articles', null, { page, limit, category, search });
 
 export const getArticleById = async (id) => {
     if (!id) {
@@ -94,34 +87,25 @@ export const getArticleById = async (id) => {
     return await apiCall('get', `/articles/${id}`);
 };
 
-export const markArticleAsRead = (articleId) =>
-    apiCall('post', `/articles/${articleId}/read`);
+export const markArticleAsRead = (articleId) => apiCall('post', `/articles/${articleId}/read`);
 
 // Search articles
-export const searchArticles = (query, page = 1, limit = 20) =>
-    apiCall('get', '/articles/search', null, { query, page, limit });
+export const searchArticles = (query, page = 1, limit = 20) => apiCall('get', '/articles/search', null, { query, page, limit });
 
 // User Preferences
-export const getUserPreferences = () =>
-    apiCall('get', '/users/preferences');
+export const getUserPreferences = () => apiCall('get', '/users/preferences');
 
-export const updateUserPreferences = (preferences) =>
-    apiCall('put', '/users/preferences', preferences);
+export const updateUserPreferences = (preferences) => apiCall('put', '/users/preferences', preferences);
 
 // Saved Articles
-export const getSavedArticles = () =>
-    apiCall('get', '/users/saved-articles');
+export const getSavedArticles = () => apiCall('get', '/users/saved-articles');
 
-export const searchSavedArticles = (query) =>
-    apiCall('get', '/users/saved-articles/search', null, { query });
+export const searchSavedArticles = (query) => apiCall('get', '/users/saved-articles/search', null, { query });
 
 export const saveArticle = async (article) => {
     console.log('Saving article:', article);
     try {
-        const response = await apiCall('post', '/users/save-article', {
-            articleId: article._id,
-            articleData: article
-        });
+        const response = await apiCall('post', '/users/save-article', { articleId: article._id, articleData: article });
         console.log('Article saved successfully:', response);
         return response;
     } catch (error) {
@@ -143,10 +127,8 @@ export const unsaveArticle = async (articleId) => {
 };
 
 // User Profile
-export const getUserProfile = () =>
-    apiCall('get', '/users/profile');
+export const getUserProfile = () => apiCall('get', '/users/profile');
 
-export const updateUserProfile = (profileData) =>
-    apiCall('put', '/users/profile', profileData);
+export const updateUserProfile = (profileData) => apiCall('put', '/users/profile', profileData);
 
 export default api;

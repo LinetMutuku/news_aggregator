@@ -137,8 +137,14 @@ export const fetchSavedArticles = () => async (dispatch) => {
     }
 };
 
+
+
 export const unsaveArticleAction = (articleId) => async (dispatch) => {
     console.log('unsaveArticleAction called with id:', articleId);
+    if (!articleId) {
+        console.error('Attempted to unsave article with undefined id');
+        return { success: false, message: 'Invalid article ID' };
+    }
     try {
         const response = await api.unsaveArticle(articleId);
         console.log('Unsave response:', response);
@@ -146,26 +152,9 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
             type: UNSAVE_ARTICLE,
             payload: articleId
         });
-        // Fetch updated saved articles list
-        dispatch(fetchSavedArticles());
-        return { success: true };
+        return { success: true, message: response.message || 'Article unsaved successfully' };
     } catch (error) {
         console.error('Error unsaving article:', error);
-        console.error('Error details:', error.response?.data);
-        if (error.response && error.response.status === 404) {
-            // If the article is not found, we consider it as already unsaved
-            dispatch({
-                type: UNSAVE_ARTICLE,
-                payload: articleId
-            });
-            // Fetch updated saved articles list
-            dispatch(fetchSavedArticles());
-            return { success: true };
-        }
-        dispatch({
-            type: UNSAVE_ARTICLE_FAILURE,
-            payload: error.response?.data?.message || error.message || 'Failed to unsave article'
-        });
         throw error;
     }
 };
