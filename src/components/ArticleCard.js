@@ -11,10 +11,6 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
     const sourceColor = useColorModeValue('gray.500', 'gray.400');
     const toast = useToast();
 
-    if (!article) {
-        console.error('ArticleCard received undefined article');
-        return null;
-    }
 
     const handleAction = (e) => {
         e.stopPropagation();
@@ -32,7 +28,35 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
                 });
             }
         } else if (onSave) {
-            onSave(article);
+            if (article._id || article.articleId) {
+                onSave(article);
+            } else {
+                console.error('Attempted to save an article with missing ID:', article);
+                toast({
+                    title: "Error",
+                    description: "Unable to save this article due to a missing ID.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+        }
+    };
+
+    const handleRead = () => {
+        if (onRead) {
+            if (article._id || article.articleId) {
+                onRead(article);
+            } else {
+                console.error('Attempted to read an article with missing ID:', article);
+                toast({
+                    title: "Error",
+                    description: "Unable to read this article due to a missing ID.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
         }
     };
 
@@ -52,7 +76,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
             bg={bgColor}
             whileHover={{ y: -5, boxShadow: "xl" }}
             transition={{ duration: 0.3 }}
-            onClick={() => onRead && onRead(article)}
+            onClick={handleRead}
             cursor="pointer"
             height="100%"
             display="flex"

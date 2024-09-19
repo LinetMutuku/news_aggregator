@@ -155,9 +155,17 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
         return { success: true, message: response.message || 'Article unsaved successfully' };
     } catch (error) {
         console.error('Error unsaving article:', error);
+        if (error.response && error.response.status === 404) {
+            dispatch({
+                type: UNSAVE_ARTICLE,
+                payload: articleId
+            });
+            return { success: true, message: 'Article was already unsaved' };
+        }
         throw error;
     }
 };
+
 
 
 export const searchSavedArticlesAction = (query) => async (dispatch) => {

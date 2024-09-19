@@ -78,10 +78,7 @@ export default function articleReducer(state = initialState, action) {
         case UNSAVE_ARTICLE:
             return {
                 ...state,
-                savedArticles: state.savedArticles.filter(article => article._id !== action.payload),
-                articles: state.articles.map(article =>
-                    article._id === action.payload ? { ...article, isSaved: false } : article
-                )
+                savedArticles: state.savedArticles.filter(article => article._id !== action.payload)
             };
         case SEARCH_SAVED_ARTICLES:
             return {

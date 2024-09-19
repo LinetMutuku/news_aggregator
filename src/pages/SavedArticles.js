@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-    Box, VStack, Heading, Text, useToast, Spinner, Alert, AlertIcon,
+    Box, VStack, Heading, Text, useToast, Spinner,
     Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement,
     AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
     AlertDialogContent, AlertDialogOverlay, Button, Modal, ModalOverlay,
@@ -15,7 +15,7 @@ import useDebounce from '../hooks/useDebounce';
 
 function SavedArticles() {
     const dispatch = useDispatch();
-    const { savedArticles, loading, error, selectedArticle } = useSelector(state => state.articles);
+    const { savedArticles, loading, selectedArticle } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
@@ -34,11 +34,9 @@ function SavedArticles() {
         dispatch(fetchSavedArticles());
     }, [dispatch]);
 
-
     useEffect(() => {
         loadSavedArticles();
     }, [loadSavedArticles]);
-
 
     const handleSearch = useCallback((query) => {
         if (!query.trim()) {
@@ -56,19 +54,15 @@ function SavedArticles() {
         }
     }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
-
-
-
-
     const handleUnsave = useCallback((article) => {
         if (article && article._id) {
             setArticleToUnsave(article);
             setIsDeleteDialogOpen(true);
         } else {
-            console.error('Attempted to unsave an article with missing or invalid ID:', article);
+            console.error('Attempted to unsave an article with missing ID:', article);
             toast({
                 title: "Error",
-                description: "Unable to unsave this article due to a missing or invalid ID.",
+                description: "Unable to unsave this article due to a missing ID.",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
@@ -81,11 +75,9 @@ function SavedArticles() {
             try {
                 const result = await dispatch(unsaveArticleAction(articleToUnsave._id));
                 if (result.success) {
-                    // Immediately update the local state
-                    setSavedArticles(prevArticles => prevArticles.filter(article => article._id !== articleToUnsave._id));
                     toast({
                         title: "Article unsaved",
-                        description: result.message || "Article successfully removed from your saved list",
+                        description: result.message,
                         status: "success",
                         duration: 3000,
                         isClosable: true,
@@ -95,28 +87,18 @@ function SavedArticles() {
                 console.error('Error unsaving article:', error);
                 toast({
                     title: "Error unsaving article",
-                    description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
+                    description: error.message || "An unexpected error occurred. Please try again.",
                     status: "error",
                     duration: 5000,
                     isClosable: true,
                 });
             }
         } else {
-            console.error('No article to unsave or article ID is undefined', articleToUnsave);
-            toast({
-                title: "Error",
-                description: "Unable to unsave this article due to a missing or invalid ID.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+            console.error('No article to unsave or article ID is undefined');
         }
         setIsDeleteDialogOpen(false);
         setArticleToUnsave(null);
     };
-
-
-
 
     const handleUnsaveCancel = () => {
         setIsDeleteDialogOpen(false);
