@@ -25,14 +25,17 @@ export const fetchArticles = (page = 1, limit = 20) => async (dispatch, getState
         }
 
         const { articles } = getState().articles;
-        const updatedArticles = page === 1 ? response.recommendations : [...articles, ...response.recommendations];
+        const newArticles = response.recommendations.filter(
+            newArticle => !articles.some(existingArticle => existingArticle._id === newArticle._id)
+        );
 
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
-            payload: updatedArticles,
-            totalPages: response.totalPages,
-            currentPage: page,
-            hasMore: page < response.totalPages
+            payload: {
+                articles: newArticles,
+                page: page,
+                totalPages: response.totalPages
+            }
         });
     } catch (error) {
         console.error('Error in fetchArticles:', error);
@@ -40,10 +43,8 @@ export const fetchArticles = (page = 1, limit = 20) => async (dispatch, getState
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to fetch articles'
         });
-        throw error;
     }
 };
-
 export const searchArticlesAction = (query, page = 1, limit = 20) => async (dispatch, getState) => {
     console.log('searchArticlesAction called with query:', query, 'page:', page, 'limit:', limit);
     dispatch({ type: FETCH_ARTICLES_REQUEST });
@@ -108,11 +109,10 @@ export const setSelectedArticle = (articleId) => async (dispatch) => {
             });
             return;
         }
-        const article = await api.getArticleById(articleId);
-        console.log('Selected article details:', article);
+
         dispatch({
             type: SET_SELECTED_ARTICLE,
-            payload: article
+            payload: articleId
         });
     } catch (error) {
         console.error('Error in setSelectedArticle:', error);

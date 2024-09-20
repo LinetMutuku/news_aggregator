@@ -11,22 +11,24 @@ import Search from '../components/Search';
 import ArticleGrid from '../components/ArticleGrid';
 import ArticleDetail from '../components/ArticleDetail';
 import ErrorBoundary from '../components/ErrorBoundary';
-import { debounce } from 'lodash';
 
 function Home() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { articles, loading, error, hasMore, page, selectedArticle } = useSelector(state => state.articles);
+    const { articles, error, hasMore, page, selectedArticle } = useSelector(state => state.articles);
     const toast = useToast();
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const debouncedFetchArticles = useCallback(
-        debounce((isInitial) => {
+    const loadArticles = useCallback((isInitial = false) => {
+        if (!isLoading && (hasMore || isInitial)) {
             setIsLoading(true);
             dispatch(fetchArticles(isInitial ? 1 : page))
-                .then(() => setIsLoading(false))
+                .then(() => {
+                    setIsLoading(false);
+                    if (isInitial) setIsInitialLoad(false);
+                })
                 .catch(error => {
                     console.error('Error loading articles:', error);
                     setIsLoading(false);
@@ -38,23 +40,21 @@ function Home() {
                         isClosable: true,
                     });
                 });
-        }, 300),
-        [dispatch, page, toast, setIsLoading]
-    );
+        }
+    }, [dispatch, hasMore, isLoading, page, toast]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
         } else if (isInitialLoad) {
-            debouncedFetchArticles(true);
-            setIsInitialLoad(false);
+            loadArticles(true);
         }
-    }, [debouncedFetchArticles, navigate, isInitialLoad]);
+    }, [loadArticles, navigate, isInitialLoad]);
 
     const handleSearch = useCallback(async (query) => {
         if (!query.trim()) {
-            debouncedFetchArticles(true);
+            loadArticles(true);
             return;
         }
         setIsLoading(true);
@@ -72,7 +72,7 @@ function Home() {
         } finally {
             setIsLoading(false);
         }
-    }, [debouncedFetchArticles, dispatch, toast]);
+    }, [loadArticles, dispatch, toast]);
 
     const handleSaveArticle = useCallback(async (article) => {
         try {
@@ -106,8 +106,8 @@ function Home() {
     }, [dispatch]);
 
     const handleLoadMore = useCallback(() => {
-        debouncedFetchArticles(false);
-    }, [debouncedFetchArticles]);
+        loadArticles();
+    }, [loadArticles]);
 
     const articleGridProps = useMemo(() => ({
         articles,
@@ -115,14 +115,6 @@ function Home() {
         onRead: handleReadArticle,
         loading: isLoading,
     }), [articles, handleSaveArticle, handleReadArticle, isLoading]);
-
-    if (isLoading && articles.length === 0) {
-        return (
-            <Center height="100vh">
-                <Spinner size="xl" />
-            </Center>
-        );
-    }
 
     return (
         <ErrorBoundary>
@@ -143,23 +135,31 @@ function Home() {
                                 <AlertIcon />
                                 <AlertTitle mr={2}>Error!</AlertTitle>
                                 <AlertDescription>{error}</AlertDescription>
-                                <Button ml={4} onClick={() => debouncedFetchArticles(true)}>Retry</Button>
+                                <Button ml={4} onClick={() => loadArticles(true)}>Retry</Button>
                             </Alert>
                         )}
 
-                        <ArticleGrid {...articleGridProps} />
-
-                        {hasMore && (
-                            <Center>
-                                <Button
-                                    colorScheme="blue"
-                                    onClick={handleLoadMore}
-                                    isLoading={isLoading}
-                                    loadingText="Loading"
-                                >
-                                    Load More
-                                </Button>
+                        {isInitialLoad ? (
+                            <Center height="50vh">
+                                <Spinner size="xl" />
                             </Center>
+                        ) : (
+                            <>
+                                <ArticleGrid {...articleGridProps} />
+
+                                {hasMore && (
+                                    <Center>
+                                        <Button
+                                            colorScheme="blue"
+                                            onClick={handleLoadMore}
+                                            isLoading={isLoading}
+                                            loadingText="Loading"
+                                        >
+                                            Load More
+                                        </Button>
+                                    </Center>
+                                )}
+                            </>
                         )}
                     </VStack>
                 </Container>

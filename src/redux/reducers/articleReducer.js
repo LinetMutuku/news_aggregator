@@ -21,7 +21,7 @@ const initialState = {
     totalPages: 0
 };
 
-export default function articleReducer(state = initialState, action) {
+export function articleReducer(state = initialState, action) {
     switch (action.type) {
         case FETCH_ARTICLES_REQUEST:
             return {
@@ -33,10 +33,10 @@ export default function articleReducer(state = initialState, action) {
             return {
                 ...state,
                 loading: false,
-                articles: action.currentPage === 1 ? action.payload : [...state.articles, ...action.payload],
-                hasMore: action.currentPage < action.totalPages,
-                page: action.currentPage + 1,
-                totalPages: action.totalPages,
+                articles: [...state.articles, ...action.payload.articles],
+                hasMore: action.payload.page < action.payload.totalPages,
+                page: action.payload.page + 1,
+                totalPages: action.payload.totalPages,
                 error: null
             };
         case FETCH_ARTICLES_FAILURE:
@@ -49,10 +49,10 @@ export default function articleReducer(state = initialState, action) {
             return {
                 ...state,
                 loading: false,
-                articles: action.payload,
-                hasMore: action.currentPage < action.totalPages,
-                page: action.currentPage + 1,
-                totalPages: action.totalPages,
+                articles: action.payload.articles,
+                hasMore: action.payload.page < action.payload.totalPages,
+                page: action.payload.page + 1,
+                totalPages: action.payload.totalPages,
                 error: null
             };
         case SAVE_ARTICLE:
@@ -78,7 +78,10 @@ export default function articleReducer(state = initialState, action) {
         case UNSAVE_ARTICLE:
             return {
                 ...state,
-                savedArticles: state.savedArticles.filter(article => article._id !== action.payload)
+                savedArticles: state.savedArticles.filter(article => article._id !== action.payload),
+                articles: state.articles.map(article =>
+                    article._id === action.payload ? { ...article, isSaved: false } : article
+                )
             };
         case SEARCH_SAVED_ARTICLES:
             return {
