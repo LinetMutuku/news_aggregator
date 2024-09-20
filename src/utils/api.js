@@ -121,6 +121,10 @@ export const unsaveArticle = async (articleId) => {
         console.log('Article unsaved successfully:', response);
         return response;
     } catch (error) {
+        if (error.response && error.response.status === 404) {
+            console.log('Article not found, considering it already unsaved');
+            return { message: 'Article was already unsaved' };
+        }
         console.error('Error unsaving article:', error.response?.data || error.message);
         throw error;
     }

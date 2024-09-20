@@ -14,7 +14,7 @@ export const FETCH_SAVED_ARTICLES = 'FETCH_SAVED_ARTICLES';
 export const SEARCH_SAVED_ARTICLES = 'SEARCH_SAVED_ARTICLES';
 
 // Action Creators
-export const fetchArticles = (page = 1, limit = 20) => async (dispatch) => {
+export const fetchArticles = (page = 1, limit = 20) => async (dispatch, getState) => {
     console.log('fetchArticles action called with page:', page, 'limit:', limit);
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
@@ -23,11 +23,16 @@ export const fetchArticles = (page = 1, limit = 20) => async (dispatch) => {
         if (!Array.isArray(response.recommendations)) {
             throw new Error('Received invalid data structure from API');
         }
+
+        const { articles } = getState().articles;
+        const updatedArticles = page === 1 ? response.recommendations : [...articles, ...response.recommendations];
+
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
-            payload: response.recommendations,
+            payload: updatedArticles,
             totalPages: response.totalPages,
-            currentPage: page
+            currentPage: page,
+            hasMore: page < response.totalPages
         });
     } catch (error) {
         console.error('Error in fetchArticles:', error);
@@ -39,7 +44,7 @@ export const fetchArticles = (page = 1, limit = 20) => async (dispatch) => {
     }
 };
 
-export const searchArticlesAction = (query, page = 1, limit = 20) => async (dispatch) => {
+export const searchArticlesAction = (query, page = 1, limit = 20) => async (dispatch, getState) => {
     console.log('searchArticlesAction called with query:', query, 'page:', page, 'limit:', limit);
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
@@ -48,11 +53,16 @@ export const searchArticlesAction = (query, page = 1, limit = 20) => async (disp
         if (!Array.isArray(response.articles)) {
             throw new Error('Received invalid data structure from search API');
         }
+
+        const { articles } = getState().articles;
+        const updatedArticles = page === 1 ? response.articles : [...articles, ...response.articles];
+
         dispatch({
             type: SEARCH_ARTICLES,
-            payload: response.articles,
+            payload: updatedArticles,
             totalPages: response.totalPages,
-            currentPage: page
+            currentPage: page,
+            hasMore: page < response.totalPages
         });
     } catch (error) {
         console.error('Error in searchArticlesAction:', error);
@@ -63,7 +73,6 @@ export const searchArticlesAction = (query, page = 1, limit = 20) => async (disp
         throw error;
     }
 };
-
 export const saveArticleAction = (article) => async (dispatch) => {
     console.log('saveArticleAction called with article:', article);
     try {
@@ -139,8 +148,9 @@ export const fetchSavedArticles = () => async (dispatch) => {
 
 
 
-export const unsaveArticleAction = (articleId) => async (dispatch) => {
-    console.log('unsaveArticleAction called with id:', articleId);
+export const unsaveArticleAction = (article) => async (dispatch) => {
+    console.log('unsaveArticleAction called with article:', article);
+    const articleId = article._id;
     if (!articleId) {
         console.error('Attempted to unsave article with undefined id');
         return { success: false, message: 'Invalid article ID' };
@@ -155,13 +165,6 @@ export const unsaveArticleAction = (articleId) => async (dispatch) => {
         return { success: true, message: response.message || 'Article unsaved successfully' };
     } catch (error) {
         console.error('Error unsaving article:', error);
-        if (error.response && error.response.status === 404) {
-            dispatch({
-                type: UNSAVE_ARTICLE,
-                payload: articleId
-            });
-            return { success: true, message: 'Article was already unsaved' };
-        }
         throw error;
     }
 };

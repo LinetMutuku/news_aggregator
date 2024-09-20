@@ -20,12 +20,16 @@ function Home() {
     const toast = useToast();
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const debouncedFetchArticles = useCallback(
         debounce((isInitial) => {
+            setIsLoading(true);
             dispatch(fetchArticles(isInitial ? 1 : page))
+                .then(() => setIsLoading(false))
                 .catch(error => {
                     console.error('Error loading articles:', error);
+                    setIsLoading(false);
                     toast({
                         title: "Error loading articles",
                         description: error.message || "An unexpected error occurred. Please try again.",
@@ -35,7 +39,7 @@ function Home() {
                     });
                 });
         }, 300),
-        [dispatch, page, toast]
+        [dispatch, page, toast, setIsLoading]
     );
 
     useEffect(() => {
@@ -53,6 +57,7 @@ function Home() {
             debouncedFetchArticles(true);
             return;
         }
+        setIsLoading(true);
         try {
             await dispatch(searchArticlesAction(query));
         } catch (error) {
@@ -64,6 +69,8 @@ function Home() {
                 duration: 5000,
                 isClosable: true,
             });
+        } finally {
+            setIsLoading(false);
         }
     }, [debouncedFetchArticles, dispatch, toast]);
 
@@ -106,10 +113,10 @@ function Home() {
         articles,
         onSave: handleSaveArticle,
         onRead: handleReadArticle,
-        loading,
-    }), [articles, handleSaveArticle, handleReadArticle, loading]);
+        loading: isLoading,
+    }), [articles, handleSaveArticle, handleReadArticle, isLoading]);
 
-    if (loading && articles.length === 0) {
+    if (isLoading && articles.length === 0) {
         return (
             <Center height="100vh">
                 <Spinner size="xl" />
@@ -147,7 +154,7 @@ function Home() {
                                 <Button
                                     colorScheme="blue"
                                     onClick={handleLoadMore}
-                                    isLoading={loading}
+                                    isLoading={isLoading}
                                     loadingText="Loading"
                                 >
                                     Load More

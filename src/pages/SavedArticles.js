@@ -23,6 +23,7 @@ function SavedArticles() {
     const toast = useToast();
     const cancelRef = useRef();
 
+
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
     const bgColor = useColorModeValue('gray.50', 'gray.900');
@@ -70,10 +71,11 @@ function SavedArticles() {
         }
     }, [toast]);
 
+
     const handleUnsaveConfirm = async () => {
         if (articleToUnsave && articleToUnsave._id) {
             try {
-                const result = await dispatch(unsaveArticleAction(articleToUnsave._id));
+                const result = await dispatch(unsaveArticleAction(articleToUnsave));
                 if (result.success) {
                     toast({
                         title: "Article unsaved",
@@ -82,6 +84,7 @@ function SavedArticles() {
                         duration: 3000,
                         isClosable: true,
                     });
+                    
                 }
             } catch (error) {
                 console.error('Error unsaving article:', error);
@@ -193,7 +196,6 @@ function SavedArticles() {
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
-
             <Modal isOpen={isModalOpen && selectedArticle} onClose={handleCloseModal} size="xl">
                 <ModalOverlay />
                 <ModalContent maxW="800px">
