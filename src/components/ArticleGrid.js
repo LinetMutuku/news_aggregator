@@ -1,25 +1,32 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { SimpleGrid, Container, VStack, Text, Spinner, Center, useToast } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 
 const ArticleGrid = React.memo(({ articles, onSave, onRead, onUnsave, loading, showUnsaveButton }) => {
-    console.log('ArticleGrid received articles:', articles);
+    console.log('ArticleGrid rendered with', articles.length, 'articles');
     const toast = useToast();
 
-    const handleAction = React.useCallback((action, article) => {
+    const handleAction = useCallback((action, article) => {
         if (article && (article._id || article.articleId)) {
             action(article);
         } else {
-            console.error(`Attempted to ${action.name} an article with missing or invalid ID:`, article);
+            console.error(`Attempted to perform action on an article with missing or invalid ID:`, article);
             toast({
                 title: "Error",
-                description: `Unable to ${action.name} this article due to a missing or invalid ID.`,
+                description: `Unable to perform this action due to a missing or invalid article ID.`,
                 status: "error",
                 duration: 3000,
                 isClosable: true,
             });
         }
     }, [toast]);
+
+    const memoizedArticles = useMemo(() => articles.map(article => ({
+        ...article,
+        onSave: () => handleAction(onSave, article),
+        onRead: () => handleAction(onRead, article),
+        onDelete: () => handleAction(onUnsave, article)
+    })), [articles, handleAction, onSave, onRead, onUnsave]);
 
     if (loading) {
         return (
@@ -41,13 +48,13 @@ const ArticleGrid = React.memo(({ articles, onSave, onRead, onUnsave, loading, s
         <Container maxW="container.xl" py={8}>
             <VStack spacing={8} align="stretch">
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={8}>
-                    {articles.map(article => (
+                    {memoizedArticles.map(article => (
                         <ArticleCard
                             key={article._id || article.articleId}
                             article={article}
-                            onSave={() => handleAction(onSave, article)}
-                            onRead={() => handleAction(onRead, article)}
-                            onDelete={() => handleAction(onUnsave, article)}
+                            onSave={article.onSave}
+                            onRead={article.onRead}
+                            onDelete={article.onDelete}
                             showDeleteButton={showUnsaveButton}
                         />
                     ))}
@@ -58,8 +65,11 @@ const ArticleGrid = React.memo(({ articles, onSave, onRead, onUnsave, loading, s
 }, (prevProps, nextProps) => {
     return prevProps.loading === nextProps.loading &&
         prevProps.articles.length === nextProps.articles.length &&
-        prevProps.articles.every((article, index) => article._id === nextProps.articles[index]._id) &&
-        prevProps.showUnsaveButton === nextProps.showUnsaveButton;
+        prevProps.showUnsaveButton === nextProps.showUnsaveButton &&
+        prevProps.articles.every((article, index) =>
+            article._id === nextProps.articles[index]._id &&
+            article.isSaved === nextProps.articles[index].isSaved
+        );
 });
 
 ArticleGrid.displayName = 'ArticleGrid';

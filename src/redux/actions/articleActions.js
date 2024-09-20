@@ -14,23 +14,23 @@ export const FETCH_SAVED_ARTICLES = 'FETCH_SAVED_ARTICLES';
 export const SEARCH_SAVED_ARTICLES = 'SEARCH_SAVED_ARTICLES';
 
 // Action Creators
-export const fetchArticles = (page = 1, limit = 20) => async (dispatch) => {
-    dispatch({ type: FETCH_ARTICLES_REQUEST });
+export const fetchArticles = (page = 1) => async (dispatch, getState) => {
+    const { articles } = getState().articles;
+    if (page === 1 && articles.length > 0) return;
+
+    dispatch({ type: 'FETCH_ARTICLES_REQUEST' });
     try {
-        const response = await api.getRecommendedArticles(page, limit);
+        const response = await api.getRecommendedArticles(page);
         dispatch({
-            type: FETCH_ARTICLES_SUCCESS,
+            type: 'FETCH_ARTICLES_SUCCESS',
             payload: {
                 articles: response.recommendations,
-                currentPage: page,
+                page: response.currentPage,
                 totalPages: response.totalPages
             }
         });
     } catch (error) {
-        dispatch({
-            type: FETCH_ARTICLES_FAILURE,
-            payload: error.message || 'Failed to fetch articles'
-        });
+        dispatch({ type: 'FETCH_ARTICLES_FAILURE', payload: error.message });
     }
 };
 

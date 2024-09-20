@@ -29,38 +29,39 @@ function Home() {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
-        } else {
+        } else if (articles.length === 0) {
             loadArticles(true);
         }
-    }, [loadArticles, navigate]);
+    }, [loadArticles, navigate, articles.length]);
 
-    const handleSearch = useCallback(async (query) => {
+    const handleSearch = useCallback((query) => {
         if (!query.trim()) {
             loadArticles(true);
-            return;
+        } else {
+            dispatch(searchArticlesAction(query));
         }
-        dispatch(searchArticlesAction(query));
     }, [loadArticles, dispatch]);
 
-    const handleSaveArticle = useCallback(async (article) => {
-        try {
-            await dispatch(saveArticleAction(article));
-            toast({
-                title: "Article saved successfully",
-                status: "success",
-                duration: 2000,
-                isClosable: true,
+    const handleSaveArticle = useCallback((article) => {
+        dispatch(saveArticleAction(article))
+            .then(() => {
+                toast({
+                    title: "Article saved successfully",
+                    status: "success",
+                    duration: 2000,
+                    isClosable: true,
+                });
+            })
+            .catch((error) => {
+                console.error('Error saving article:', error);
+                toast({
+                    title: "Error saving article",
+                    description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
             });
-        } catch (error) {
-            console.error('Error saving article:', error);
-            toast({
-                title: "Error saving article",
-                description: error.response?.data?.message || error.message || "An unexpected error occurred. Please try again.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        }
     }, [dispatch, toast]);
 
     const handleReadArticle = useCallback((article) => {
@@ -73,16 +74,40 @@ function Home() {
         dispatch(setSelectedArticle(null));
     }, [dispatch]);
 
-    const handleLoadMore = useCallback(() => {
-        loadArticles();
-    }, [loadArticles]);
-
     const articleGridProps = useMemo(() => ({
         articles,
         onSave: handleSaveArticle,
         onRead: handleReadArticle,
         loading,
     }), [articles, handleSaveArticle, handleReadArticle, loading]);
+
+    const renderContent = () => {
+        if (loading && articles.length === 0) {
+            return (
+                <Center height="50vh">
+                    <Spinner size="xl" />
+                </Center>
+            );
+        }
+
+        return (
+            <>
+                <ArticleGrid {...articleGridProps} />
+                {hasMore && (
+                    <Center>
+                        <Button
+                            colorScheme="blue"
+                            onClick={() => loadArticles()}
+                            isLoading={loading}
+                            loadingText="Loading"
+                        >
+                            Load More
+                        </Button>
+                    </Center>
+                )}
+            </>
+        );
+    };
 
     return (
         <ErrorBoundary>
@@ -107,32 +132,11 @@ function Home() {
                             </Alert>
                         )}
 
-                        {loading && articles.length === 0 ? (
-                            <Center height="50vh">
-                                <Spinner size="xl" />
-                            </Center>
-                        ) : (
-                            <>
-                                <ArticleGrid {...articleGridProps} />
-
-                                {hasMore && (
-                                    <Center>
-                                        <Button
-                                            colorScheme="blue"
-                                            onClick={handleLoadMore}
-                                            isLoading={loading}
-                                            loadingText="Loading"
-                                        >
-                                            Load More
-                                        </Button>
-                                    </Center>
-                                )}
-                            </>
-                        )}
+                        {renderContent()}
                     </VStack>
                 </Container>
 
-                <Modal isOpen={isModalOpen && selectedArticle} onClose={handleCloseModal} size="xl">
+                <Modal isOpen={isModalOpen && !!selectedArticle} onClose={handleCloseModal} size="xl">
                     <ModalOverlay />
                     <ModalContent maxW="800px">
                         <ModalCloseButton />
