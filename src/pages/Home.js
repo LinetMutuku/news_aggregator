@@ -15,64 +15,32 @@ import ErrorBoundary from '../components/ErrorBoundary';
 function Home() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { articles, error, hasMore, page, selectedArticle } = useSelector(state => state.articles);
+    const { articles, error, hasMore, page, selectedArticle, loading } = useSelector(state => state.articles);
     const toast = useToast();
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
 
     const loadArticles = useCallback((isInitial = false) => {
-        if (!isLoading && (hasMore || isInitial)) {
-            setIsLoading(true);
-            dispatch(fetchArticles(isInitial ? 1 : page))
-                .then(() => {
-                    setIsLoading(false);
-                    if (isInitial) setIsInitialLoad(false);
-                })
-                .catch(error => {
-                    console.error('Error loading articles:', error);
-                    setIsLoading(false);
-                    toast({
-                        title: "Error loading articles",
-                        description: error.message || "An unexpected error occurred. Please try again.",
-                        status: "error",
-                        duration: 5000,
-                        isClosable: true,
-                    });
-                });
+        if (!loading && (hasMore || isInitial)) {
+            dispatch(fetchArticles(isInitial ? 1 : page));
         }
-    }, [dispatch, hasMore, isLoading, page, toast]);
+    }, [dispatch, hasMore, loading, page]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
-        } else if (isInitialLoad) {
+        } else {
             loadArticles(true);
         }
-    }, [loadArticles, navigate, isInitialLoad]);
+    }, [loadArticles, navigate]);
 
     const handleSearch = useCallback(async (query) => {
         if (!query.trim()) {
             loadArticles(true);
             return;
         }
-        setIsLoading(true);
-        try {
-            await dispatch(searchArticlesAction(query));
-        } catch (error) {
-            console.error('Error in handleSearch:', error);
-            toast({
-                title: "Error searching articles",
-                description: error.message || "An unexpected error occurred. Please try again.",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [loadArticles, dispatch, toast]);
+        dispatch(searchArticlesAction(query));
+    }, [loadArticles, dispatch]);
 
     const handleSaveArticle = useCallback(async (article) => {
         try {
@@ -113,8 +81,8 @@ function Home() {
         articles,
         onSave: handleSaveArticle,
         onRead: handleReadArticle,
-        loading: isLoading,
-    }), [articles, handleSaveArticle, handleReadArticle, isLoading]);
+        loading,
+    }), [articles, handleSaveArticle, handleReadArticle, loading]);
 
     return (
         <ErrorBoundary>
@@ -139,7 +107,7 @@ function Home() {
                             </Alert>
                         )}
 
-                        {isInitialLoad ? (
+                        {loading && articles.length === 0 ? (
                             <Center height="50vh">
                                 <Spinner size="xl" />
                             </Center>
@@ -152,7 +120,7 @@ function Home() {
                                         <Button
                                             colorScheme="blue"
                                             onClick={handleLoadMore}
-                                            isLoading={isLoading}
+                                            isLoading={loading}
                                             loadingText="Loading"
                                         >
                                             Load More

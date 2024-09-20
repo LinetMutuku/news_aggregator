@@ -14,64 +14,43 @@ export const FETCH_SAVED_ARTICLES = 'FETCH_SAVED_ARTICLES';
 export const SEARCH_SAVED_ARTICLES = 'SEARCH_SAVED_ARTICLES';
 
 // Action Creators
-export const fetchArticles = (page = 1, limit = 20) => async (dispatch, getState) => {
-    console.log('fetchArticles action called with page:', page, 'limit:', limit);
+export const fetchArticles = (page = 1, limit = 20) => async (dispatch) => {
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
         const response = await api.getRecommendedArticles(page, limit);
-        console.log('API response received:', response);
-        if (!Array.isArray(response.recommendations)) {
-            throw new Error('Received invalid data structure from API');
-        }
-
-        const { articles } = getState().articles;
-        const newArticles = response.recommendations.filter(
-            newArticle => !articles.some(existingArticle => existingArticle._id === newArticle._id)
-        );
-
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
             payload: {
-                articles: newArticles,
-                page: page,
+                articles: response.recommendations,
+                currentPage: page,
                 totalPages: response.totalPages
             }
         });
     } catch (error) {
-        console.error('Error in fetchArticles:', error);
         dispatch({
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to fetch articles'
         });
     }
 };
-export const searchArticlesAction = (query, page = 1, limit = 20) => async (dispatch, getState) => {
-    console.log('searchArticlesAction called with query:', query, 'page:', page, 'limit:', limit);
+
+export const searchArticlesAction = (query, page = 1, limit = 20) => async (dispatch) => {
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
         const response = await api.searchArticles(query, page, limit);
-        console.log('Search API response received:', response);
-        if (!Array.isArray(response.articles)) {
-            throw new Error('Received invalid data structure from search API');
-        }
-
-        const { articles } = getState().articles;
-        const updatedArticles = page === 1 ? response.articles : [...articles, ...response.articles];
-
         dispatch({
             type: SEARCH_ARTICLES,
-            payload: updatedArticles,
-            totalPages: response.totalPages,
-            currentPage: page,
-            hasMore: page < response.totalPages
+            payload: {
+                articles: response.articles,
+                currentPage: page,
+                totalPages: response.totalPages
+            }
         });
     } catch (error) {
-        console.error('Error in searchArticlesAction:', error);
         dispatch({
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to search articles'
         });
-        throw error;
     }
 };
 export const saveArticleAction = (article) => async (dispatch) => {

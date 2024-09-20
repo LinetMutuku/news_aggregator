@@ -4,24 +4,25 @@ import {
     FETCH_ARTICLES_FAILURE,
     SEARCH_ARTICLES,
     SAVE_ARTICLE,
+    SAVE_ARTICLE_FAILURE,
+    UNSAVE_ARTICLE,
+    UNSAVE_ARTICLE_FAILURE,
     SET_SELECTED_ARTICLE,
     FETCH_SAVED_ARTICLES,
-    UNSAVE_ARTICLE,
     SEARCH_SAVED_ARTICLES
 } from '../actions/articleActions';
 
 const initialState = {
     articles: [],
-    savedArticles: [],
-    selectedArticle: null,
     loading: false,
     error: null,
     hasMore: true,
     page: 1,
-    totalPages: 0
+    totalPages: 0,
+    selectedArticle: null
 };
 
-export function articleReducer(state = initialState, action) {
+export const articleReducer = (state = initialState, action) => {
     switch (action.type) {
         case FETCH_ARTICLES_REQUEST:
             return {
@@ -33,9 +34,11 @@ export function articleReducer(state = initialState, action) {
             return {
                 ...state,
                 loading: false,
-                articles: [...state.articles, ...action.payload.articles],
-                hasMore: action.payload.page < action.payload.totalPages,
-                page: action.payload.page + 1,
+                articles: action.payload.currentPage === 1
+                    ? action.payload.articles
+                    : [...state.articles, ...action.payload.articles],
+                hasMore: action.payload.currentPage < action.payload.totalPages,
+                page: action.payload.currentPage + 1,
                 totalPages: action.payload.totalPages,
                 error: null
             };
@@ -63,6 +66,24 @@ export function articleReducer(state = initialState, action) {
                 ),
                 savedArticles: [...state.savedArticles, action.payload]
             };
+        case SAVE_ARTICLE_FAILURE:
+            return {
+                ...state,
+                error: action.payload
+            };
+        case UNSAVE_ARTICLE:
+            return {
+                ...state,
+                savedArticles: state.savedArticles.filter(article => article._id !== action.payload),
+                articles: state.articles.map(article =>
+                    article._id === action.payload ? { ...article, isSaved: false } : article
+                )
+            };
+        case UNSAVE_ARTICLE_FAILURE:
+            return {
+                ...state,
+                error: action.payload
+            };
         case SET_SELECTED_ARTICLE:
             return {
                 ...state,
@@ -75,14 +96,6 @@ export function articleReducer(state = initialState, action) {
                 savedArticles: action.payload,
                 error: null
             };
-        case UNSAVE_ARTICLE:
-            return {
-                ...state,
-                savedArticles: state.savedArticles.filter(article => article._id !== action.payload),
-                articles: state.articles.map(article =>
-                    article._id === action.payload ? { ...article, isSaved: false } : article
-                )
-            };
         case SEARCH_SAVED_ARTICLES:
             return {
                 ...state,
@@ -93,4 +106,4 @@ export function articleReducer(state = initialState, action) {
         default:
             return state;
     }
-}
+};
