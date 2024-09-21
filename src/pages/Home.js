@@ -1,7 +1,11 @@
-import React, { useEffect, useCallback, useState, useMemo } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Box, VStack, Heading, Container, Text, Button, Center, Alert, AlertIcon, AlertTitle, AlertDescription } from "@chakra-ui/react";
+import {
+    Box, VStack, Heading, Container, Text,
+    Alert, AlertIcon, AlertTitle, AlertDescription,
+    Flex, Button
+} from "@chakra-ui/react";
 import { fetchArticles, searchArticlesAction, saveArticleAction, setSelectedArticle } from '../redux/actions/articleActions';
 import Search from '../components/Search';
 import ArticleGrid from '../components/ArticleGrid';
@@ -11,21 +15,20 @@ import ErrorBoundary from '../components/ErrorBoundary';
 function Home() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { articles, error, hasMore, page, selectedArticle, loading } = useSelector(state => state.articles);
+    const { articles, error, totalPages, loading } = useSelector(state => state.articles);
+    const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const loadArticles = useCallback((isInitial = false) => {
-        if (!loading && (hasMore || isInitial)) {
-            dispatch(fetchArticles(isInitial ? 1 : page));
-        }
-    }, [dispatch, hasMore, loading, page]);
+    const loadArticles = useCallback((page) => {
+        dispatch(fetchArticles(page));
+    }, [dispatch]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
         } else if (articles.length === 0) {
-            loadArticles(true);
+            loadArticles(1);
         }
     }, [loadArticles, navigate, articles.length]);
 
@@ -47,16 +50,12 @@ function Home() {
         dispatch(setSelectedArticle(null));
     }, [dispatch]);
 
-    const handleLoadMore = useCallback(() => {
-        loadArticles();
-    }, [loadArticles]);
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        loadArticles(page);
+    };
 
-    const articleGridProps = useMemo(() => ({
-        articles,
-        onSave: handleSaveArticle,
-        onRead: handleReadArticle,
-        loading,
-    }), [articles, handleSaveArticle, handleReadArticle, loading]);
+    const pageArticles = articles.slice((currentPage - 1) * 20, currentPage * 20);
 
     return (
         <ErrorBoundary>
@@ -80,26 +79,30 @@ function Home() {
                             </Alert>
                         )}
 
-                        <ArticleGrid {...articleGridProps} />
+                        <ArticleGrid
+                            articles={pageArticles}
+                            onSave={handleSaveArticle}
+                            onRead={handleReadArticle}
+                            loading={loading}
+                        />
 
-                        {hasMore && (
-                            <Center>
+                        <Flex justifyContent="center" mt={4}>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                 <Button
-                                    colorScheme="blue"
-                                    onClick={handleLoadMore}
-                                    isLoading={loading}
-                                    loadingText="Loading More"
+                                    key={page}
+                                    mx={1}
+                                    onClick={() => handlePageChange(page)}
+                                    colorScheme={currentPage === page ? "blue" : "gray"}
                                 >
-                                    Load More
+                                    {page}
                                 </Button>
-                            </Center>
-                        )}
+                            ))}
+                        </Flex>
                     </VStack>
                 </Container>
 
-                {isModalOpen && selectedArticle && (
+                {isModalOpen && (
                     <ArticleDetail
-                        article={selectedArticle}
                         isOpen={isModalOpen}
                         onClose={handleCloseModal}
                     />

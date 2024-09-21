@@ -27,7 +27,6 @@ export const fetchArticles = (page = 1) => async (dispatch) => {
                 articles: response.recommendations,
                 currentPage: page,
                 totalPages: response.totalPages,
-                hasMore: page < response.totalPages
             }
         });
     } catch (error) {
