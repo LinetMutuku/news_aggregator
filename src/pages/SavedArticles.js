@@ -15,15 +15,17 @@ import useDebounce from '../hooks/useDebounce';
 
 function SavedArticles() {
     const dispatch = useDispatch();
-    const { savedArticles, loading, selectedArticle, error } = useSelector(state => state.articles);
+    const { savedArticles, loading, error } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const toast = useToast();
     const cancelRef = useRef();
-
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const articlesPerPage = 20;
 
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -120,6 +122,16 @@ function SavedArticles() {
         loadSavedArticles();
     };
 
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+        window.scrollTo(0, 0);
+    };
+
+    const indexOfLastArticle = currentPage * articlesPerPage;
+    const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
+    const currentArticles = savedArticles.slice(indexOfFirstArticle, indexOfLastArticle);
+    const totalPages = Math.ceil(savedArticles.length / articlesPerPage);
+
     if (loading && (!savedArticles || savedArticles.length === 0)) {
         return (
             <Box textAlign="center" py={10} bg={bgColor} minH="100vh">
@@ -165,13 +177,34 @@ function SavedArticles() {
                     )}
                     <Fade in={true}>
                         <ArticleGrid
-                            articles={savedArticles}
+                            articles={currentArticles}
                             onUnsave={handleUnsave}
                             onRead={handleReadArticle}
                             showUnsaveButton={true}
                             loading={loading}
                         />
                     </Fade>
+                    {savedArticles.length > articlesPerPage && (
+                        <Flex justifyContent="center" mt={4}>
+                            <Button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                isDisabled={currentPage === 1}
+                                mr={2}
+                            >
+                                Previous
+                            </Button>
+                            <Text alignSelf="center" mx={2}>
+                                Page {currentPage} of {totalPages}
+                            </Text>
+                            <Button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                isDisabled={currentPage === totalPages}
+                                ml={2}
+                            >
+                                Next
+                            </Button>
+                        </Flex>
+                    )}
                 </VStack>
             </Container>
 
@@ -201,13 +234,12 @@ function SavedArticles() {
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
-
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} size="xl">
-                <ModalOverlay />
-                <ModalContent maxW="800px">
-                    <ModalCloseButton />
+                <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+                <ModalContent maxW="800px" w="95%" mx="auto" my="4" borderRadius="lg" overflow="hidden">
+                    <ModalCloseButton zIndex="1" />
                     <ModalBody p={0}>
-                        {selectedArticle && <ArticleDetail article={selectedArticle} />}
+                        <ArticleDetail />
                     </ModalBody>
                 </ModalContent>
             </Modal>

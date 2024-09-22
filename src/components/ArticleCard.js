@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
-const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) => {
+const ArticleCard = ({ article, onSave, onUnsave, onRead, showUnsaveButton }) => {
     const [isSaved, setIsSaved] = useState(article.isSaved || false);
     const bgColor = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.700', 'gray.100');
@@ -14,11 +14,11 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
 
     const handleAction = (e) => {
         e.stopPropagation();
-        if (showDeleteButton && onDelete) {
+        if (showUnsaveButton && onUnsave) {
             if (article._id || article.articleId) {
-                onDelete(article);
+                onUnsave(article);
             } else {
-                console.error('Attempted to delete an article with missing ID:', article);
+                console.error('Attempted to unsave an article with missing ID:', article);
                 toast({
                     title: "Error",
                     description: "Unable to unsave this article due to a missing ID.",
@@ -31,7 +31,6 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
             if (article._id || article.articleId) {
                 onSave(article);
                 setIsSaved(true);
-                // Toast removed from here
             } else {
                 console.error('Attempted to save an article with missing ID:', article);
                 toast({
@@ -44,6 +43,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
             }
         }
     };
+
     const handleRead = () => {
         if (onRead) {
             if (article._id || article.articleId) {
@@ -65,8 +65,8 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
     const sourceName = article.source?.name || article.source || 'Unknown Source';
     const publishDate = article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Date unknown';
 
-    const buttonText = showDeleteButton ? "Unsave" : (isSaved ? "Saved" : "Save");
-    const buttonColorScheme = showDeleteButton ? "red" : (isSaved ? "green" : "blue");
+    const buttonText = showUnsaveButton ? "Unsave" : (isSaved ? "Saved" : "Save");
+    const buttonColorScheme = showUnsaveButton ? "red" : (isSaved ? "green" : "blue");
 
     return (
         <MotionBox
@@ -96,17 +96,15 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
                     <Badge borderRadius="full" px="2" colorScheme="teal">
                         {article.category || 'Uncategorized'}
                     </Badge>
-                    {(onSave || showDeleteButton) && (
-                        <Button
-                            size="sm"
-                            colorScheme={buttonColorScheme}
-                            onClick={handleAction}
-                            variant="outline"
-                            isDisabled={isSaved && !showDeleteButton}
-                        >
-                            {buttonText}
-                        </Button>
-                    )}
+                    <Button
+                        size="sm"
+                        colorScheme={buttonColorScheme}
+                        onClick={handleAction}
+                        variant="outline"
+                        isDisabled={isSaved && !showUnsaveButton}
+                    >
+                        {buttonText}
+                    </Button>
                 </Flex>
 
                 <Heading

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     Box, VStack, Heading, Container, Text,
     Alert, AlertIcon, AlertTitle, AlertDescription,
-    Flex, Button, useToast
+    Flex, Button, useToast, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody
 } from "@chakra-ui/react";
 import { fetchArticles, searchArticlesAction, saveArticleAction, setSelectedArticle } from '../redux/actions/articleActions';
 import Search from '../components/Search';
@@ -57,10 +57,12 @@ function Home() {
         });
     }, [dispatch, toast]);
 
+
     const handleReadArticle = useCallback((article) => {
         dispatch(setSelectedArticle(article._id));
         setIsModalOpen(true);
     }, [dispatch]);
+
 
     const handleCloseModal = useCallback(() => {
         setIsModalOpen(false);
@@ -126,13 +128,15 @@ function Home() {
                         </Flex>
                     </VStack>
                 </Container>
-
-                {isModalOpen && (
-                    <ArticleDetail
-                        isOpen={isModalOpen}
-                        onClose={handleCloseModal}
-                    />
-                )}
+                <Modal isOpen={isModalOpen} onClose={handleCloseModal} size="xl">
+                    <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+                    <ModalContent maxW="800px" w="95%" mx="auto" my="4" borderRadius="lg" overflow="hidden">
+                        <ModalCloseButton zIndex="1" />
+                        <ModalBody p={0}>
+                            <ArticleDetail />
+                        </ModalBody>
+                    </ModalContent>
+                </Modal>
             </Box>
         </ErrorBoundary>
     );
