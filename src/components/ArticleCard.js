@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Image, Badge, Text, Heading, Flex, Button, useColorModeValue, useToast } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) => {
+    const [isSaved, setIsSaved] = useState(article.isSaved || false);
     const bgColor = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.700', 'gray.100');
     const descriptionColor = useColorModeValue('gray.600', 'gray.300');
     const sourceColor = useColorModeValue('gray.500', 'gray.400');
     const toast = useToast();
-
 
     const handleAction = (e) => {
         e.stopPropagation();
@@ -30,6 +30,8 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
         } else if (onSave) {
             if (article._id || article.articleId) {
                 onSave(article);
+                setIsSaved(true);
+                // Toast removed from here
             } else {
                 console.error('Attempted to save an article with missing ID:', article);
                 toast({
@@ -42,7 +44,6 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
             }
         }
     };
-
     const handleRead = () => {
         if (onRead) {
             if (article._id || article.articleId) {
@@ -64,8 +65,8 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
     const sourceName = article.source?.name || article.source || 'Unknown Source';
     const publishDate = article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Date unknown';
 
-    const buttonText = showDeleteButton ? "Unsave" : (article.isSaved ? "Saved" : "Save");
-    const buttonColorScheme = showDeleteButton ? "red" : "blue";
+    const buttonText = showDeleteButton ? "Unsave" : (isSaved ? "Saved" : "Save");
+    const buttonColorScheme = showDeleteButton ? "red" : (isSaved ? "green" : "blue");
 
     return (
         <MotionBox
@@ -101,6 +102,7 @@ const ArticleCard = ({ article, onSave, onDelete, onRead, showDeleteButton }) =>
                             colorScheme={buttonColorScheme}
                             onClick={handleAction}
                             variant="outline"
+                            isDisabled={isSaved && !showDeleteButton}
                         >
                             {buttonText}
                         </Button>

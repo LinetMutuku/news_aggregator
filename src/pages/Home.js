@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     Box, VStack, Heading, Container, Text,
     Alert, AlertIcon, AlertTitle, AlertDescription,
-    Flex, Button
+    Flex, Button, useToast
 } from "@chakra-ui/react";
 import { fetchArticles, searchArticlesAction, saveArticleAction, setSelectedArticle } from '../redux/actions/articleActions';
 import Search from '../components/Search';
@@ -15,6 +15,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 function Home() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const toast = useToast();
     const { articles, error, totalPages, loading } = useSelector(state => state.articles);
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,8 +38,24 @@ function Home() {
     }, [dispatch]);
 
     const handleSaveArticle = useCallback((article) => {
-        dispatch(saveArticleAction(article));
-    }, [dispatch]);
+        dispatch(saveArticleAction(article)).then(() => {
+            toast({
+                title: "Article saved",
+                description: "The article has been saved successfully.",
+                status: "success",
+                duration: 2000,
+                isClosable: true,
+            });
+        }).catch((error) => {
+            toast({
+                title: "Error saving article",
+                description: error.message || "An unexpected error occurred.",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        });
+    }, [dispatch, toast]);
 
     const handleReadArticle = useCallback((article) => {
         dispatch(setSelectedArticle(article._id));
@@ -50,9 +67,11 @@ function Home() {
         dispatch(setSelectedArticle(null));
     }, [dispatch]);
 
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-        loadArticles(page);
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            loadArticles(newPage);
+        }
     };
 
     const pageArticles = articles.slice((currentPage - 1) * 20, currentPage * 20);
@@ -87,16 +106,23 @@ function Home() {
                         />
 
                         <Flex justifyContent="center" mt={4}>
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                <Button
-                                    key={page}
-                                    mx={1}
-                                    onClick={() => handlePageChange(page)}
-                                    colorScheme={currentPage === page ? "blue" : "gray"}
-                                >
-                                    {page}
-                                </Button>
-                            ))}
+                            <Button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                isDisabled={currentPage === 1}
+                                mr={2}
+                            >
+                                Previous
+                            </Button>
+                            <Text alignSelf="center" mx={2}>
+                                Page {currentPage} of {totalPages}
+                            </Text>
+                            <Button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                isDisabled={currentPage === totalPages}
+                                ml={2}
+                            >
+                                Next
+                            </Button>
                         </Flex>
                     </VStack>
                 </Container>

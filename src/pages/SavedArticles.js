@@ -5,7 +5,7 @@ import {
     Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement,
     AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
     AlertDialogContent, AlertDialogOverlay, Button, Modal, ModalOverlay,
-    ModalContent, ModalCloseButton, ModalBody
+    ModalContent, ModalCloseButton, ModalBody, Alert, AlertIcon, Flex
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
@@ -15,14 +15,13 @@ import useDebounce from '../hooks/useDebounce';
 
 function SavedArticles() {
     const dispatch = useDispatch();
-    const { savedArticles, loading, selectedArticle } = useSelector(state => state.articles);
+    const { savedArticles, loading, selectedArticle, error } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const toast = useToast();
     const cancelRef = useRef();
-
 
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -71,7 +70,6 @@ function SavedArticles() {
         }
     }, [toast]);
 
-
     const handleUnsaveConfirm = async () => {
         if (articleToUnsave && articleToUnsave._id) {
             try {
@@ -84,7 +82,6 @@ function SavedArticles() {
                         duration: 3000,
                         isClosable: true,
                     });
-                    
                 }
             } catch (error) {
                 console.error('Error unsaving article:', error);
@@ -142,22 +139,30 @@ function SavedArticles() {
                     <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
                         Revisit and manage your curated collection of saved stories.
                     </Text>
-                    <InputGroup>
-                        <InputLeftElement pointerEvents="none">
-                            <SearchIcon color="gray.300" />
-                        </InputLeftElement>
-                        <Input
-                            placeholder="Search saved articles"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            bg={inputBgColor}
-                        />
+                    <Flex>
+                        <InputGroup>
+                            <InputLeftElement pointerEvents="none">
+                                <SearchIcon color="gray.300" />
+                            </InputLeftElement>
+                            <Input
+                                placeholder="Search saved articles"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                bg={inputBgColor}
+                            />
+                        </InputGroup>
                         {searchQuery && (
-                            <Button ml={2} onClick={handleClearSearch}>
+                            <Button ml={2} onClick={handleClearSearch} colorScheme="blue">
                                 Clear
                             </Button>
                         )}
-                    </InputGroup>
+                    </Flex>
+                    {error && (
+                        <Alert status="error">
+                            <AlertIcon />
+                            {error}
+                        </Alert>
+                    )}
                     <Fade in={true}>
                         <ArticleGrid
                             articles={savedArticles}
@@ -196,7 +201,8 @@ function SavedArticles() {
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
-            <Modal isOpen={isModalOpen && selectedArticle} onClose={handleCloseModal} size="xl">
+
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} size="xl">
                 <ModalOverlay />
                 <ModalContent maxW="800px">
                     <ModalCloseButton />
