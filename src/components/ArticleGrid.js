@@ -43,7 +43,10 @@ const ArticleGrid = memo(({ articles, onSave, onUnsave, onRead, loading, showUns
     return prevProps.loading === nextProps.loading &&
         prevProps.articles.length === nextProps.articles.length &&
         prevProps.articles.every((article, index) => article._id === nextProps.articles[index]._id) &&
-        prevProps.showUnsaveButton === nextProps.showUnsaveButton;
+        prevProps.showUnsaveButton === nextProps.showUnsaveButton &&
+        prevProps.onSave === nextProps.onSave &&
+        prevProps.onUnsave === nextProps.onUnsave &&
+        prevProps.onRead === nextProps.onRead;
 });
 
 ArticleGrid.displayName = 'ArticleGrid';

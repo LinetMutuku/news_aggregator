@@ -145,7 +145,8 @@ function SavedArticles() {
         <Box bg={bgColor} minHeight="100vh">
             <Container maxW="container.xl">
                 <VStack spacing={8} align="stretch" py={8}>
-                    <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
+                    <Heading textAlign="center" fontSize={{ base: "3xl",
+                        md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
                         Your Saved Articles
                     </Heading>
                     <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
