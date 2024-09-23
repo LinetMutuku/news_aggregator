@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -27,7 +27,7 @@ function Home() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUnsaveDialogOpen, setIsUnsaveDialogOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
-    const cancelRef = React.useRef();
+    const cancelRef = useRef();
 
     const loadArticles = useCallback((page) => {
         dispatch(fetchArticles(page));
@@ -87,10 +87,8 @@ function Home() {
                         duration: 2000,
                         isClosable: true,
                     });
-                    // Update the article's saved status in the frontend
-                    const updatedArticles = articles.map(a =>
-                        a._id === articleToUnsave._id ? { ...a, isSaved: false } : a
-                    );
+                    // Remove the unsaved article from the current articles list
+                    const updatedArticles = articles.filter(a => a._id !== articleToUnsave._id);
                     dispatch({ type: 'SET_ARTICLES', payload: updatedArticles });
                 }
             }).catch((error) => {
@@ -159,7 +157,7 @@ function Home() {
                             onUnsave={handleUnsaveArticle}
                             onRead={handleReadArticle}
                             loading={loading}
-                            showUnsaveButton={true}
+                            isSavedPage={false}
                         />
 
                         <Flex justifyContent="center" mt={4}>

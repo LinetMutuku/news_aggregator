@@ -1,20 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Image, Badge, Text, Heading, Flex, Button, useColorModeValue, useToast } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
-const ArticleCard = ({ article, onSave, onUnsave, onRead, isSavedPage = false }) => {
+const ArticleCard = ({ article, onSave, onUnsave, onRead, isSavedPage }) => {
     const [isSaved, setIsSaved] = useState(article.isSaved || false);
     const bgColor = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.700', 'gray.100');
     const descriptionColor = useColorModeValue('gray.600', 'gray.300');
     const sourceColor = useColorModeValue('gray.500', 'gray.400');
     const toast = useToast();
-
-    useEffect(() => {
-        setIsSaved(article.isSaved || false);
-    }, [article.isSaved]);
 
     const handleSave = (e) => {
         e.stopPropagation();
@@ -37,6 +33,7 @@ const ArticleCard = ({ article, onSave, onUnsave, onRead, isSavedPage = false })
         e.stopPropagation();
         if (article._id || article.articleId) {
             onUnsave(article);
+            setIsSaved(false);
         } else {
             console.error('Attempted to unsave an article with missing ID:', article);
             toast({
