@@ -4,7 +4,8 @@ import {
     Box, VStack, Heading, Text, useToast, Spinner,
     Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement,
     Button, Alert, AlertIcon, Flex, AlertDialog, AlertDialogBody, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogContent, AlertDialogOverlay
+    AlertDialogHeader, AlertDialogContent, AlertDialogOverlay,
+    Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
@@ -18,7 +19,9 @@ function SavedArticles() {
     const toast = useToast();
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [isUnsaveDialogOpen, setIsUnsaveDialogOpen] = useState(false);
+    const [isReadModalOpen, setIsReadModalOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
+    const [selectedArticle, setSelectedArticle] = useState(null);
     const cancelRef = useRef();
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -90,6 +93,16 @@ function SavedArticles() {
         setArticleToUnsave(null);
     };
 
+    const handleReadArticle = useCallback((article) => {
+        setSelectedArticle(article);
+        setIsReadModalOpen(true);
+    }, []);
+
+    const handleCloseReadModal = () => {
+        setIsReadModalOpen(false);
+        setSelectedArticle(null);
+    };
+
     const handleClearSearch = () => {
         setSearchQuery('');
         loadSavedArticles();
@@ -152,6 +165,7 @@ function SavedArticles() {
                         <ArticleGrid
                             articles={currentArticles}
                             onUnsave={handleUnsave}
+                            onRead={handleReadArticle}
                             loading={loading}
                             isSavedPage={true}
                         />
@@ -206,6 +220,22 @@ function SavedArticles() {
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
+
+            <Modal isOpen={isReadModalOpen} onClose={handleCloseReadModal} size="xl">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>{selectedArticle?.title}</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Text>{selectedArticle?.content}</Text>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button colorScheme="blue" mr={3} onClick={handleCloseReadModal}>
+                            Close
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }

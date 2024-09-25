@@ -6,7 +6,7 @@ import {
     Alert, AlertIcon, AlertTitle, AlertDescription,
     Flex, Button, useToast, AlertDialog, AlertDialogBody, AlertDialogFooter,
     AlertDialogHeader, AlertDialogContent, AlertDialogOverlay,
-    useColorModeValue
+    useColorModeValue, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton
 } from "@chakra-ui/react";
 import { fetchArticles, searchArticlesAction, saveArticleAction, unsaveArticleAction, deleteArticleAction } from '../redux/actions/articleActions';
 import Search from '../components/Search';
@@ -24,8 +24,10 @@ function Home() {
     const { articles, error, totalPages, loading, currentPage } = useSelector(state => state.articles);
     const [isUnsaveDialogOpen, setIsUnsaveDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isReadModalOpen, setIsReadModalOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
     const [articleToDelete, setArticleToDelete] = useState(null);
+    const [selectedArticle, setSelectedArticle] = useState(null);
     const cancelRef = useRef();
 
     const loadArticles = useCallback((page) => {
@@ -36,10 +38,10 @@ function Home() {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
-        } else if (articles.length === 0) {
-            loadArticles(1);
+        } else {
+            loadArticles(currentPage);
         }
-    }, [loadArticles, navigate, articles.length]);
+    }, [loadArticles, navigate, currentPage]);
 
     const handleSearch = useCallback((query) => {
         dispatch(searchArticlesAction(query));
@@ -137,6 +139,16 @@ function Home() {
         setArticleToDelete(null);
     };
 
+    const handleReadArticle = useCallback((article) => {
+        setSelectedArticle(article);
+        setIsReadModalOpen(true);
+    }, []);
+
+    const handleCloseReadModal = () => {
+        setIsReadModalOpen(false);
+        setSelectedArticle(null);
+    };
+
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             loadArticles(newPage);
@@ -170,6 +182,7 @@ function Home() {
                             onSave={handleSaveArticle}
                             onUnsave={handleUnsaveArticle}
                             onDelete={handleDeleteArticle}
+                            onRead={handleReadArticle}
                             loading={loading}
                             isSavedPage={false}
                         />
@@ -249,6 +262,22 @@ function Home() {
                         </AlertDialogContent>
                     </AlertDialogOverlay>
                 </AlertDialog>
+
+                <Modal isOpen={isReadModalOpen} onClose={handleCloseReadModal} size="xl">
+                    <ModalOverlay />
+                    <ModalContent>
+                        <ModalHeader>{selectedArticle?.title}</ModalHeader>
+                        <ModalCloseButton />
+                        <ModalBody>
+                            <Text>{selectedArticle?.content}</Text>
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button colorScheme="blue" mr={3} onClick={handleCloseReadModal}>
+                                Close
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
             </Box>
         </ErrorBoundary>
     );
