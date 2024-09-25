@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Header from "./components/Header";
+import SidebarNavigation from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import SavedArticles from "./pages/SavedArticles";
@@ -14,7 +14,7 @@ function App() {
       <ChakraProvider>
         <Router>
           <Box minH="100vh" display="flex" flexDirection="column">
-            <Header />
+            <SidebarNavigation/>
             <Box flex="1">
               <Routes>
                 <Route path="/" element={<Login />} />
