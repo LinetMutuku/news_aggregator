@@ -24,7 +24,7 @@ const initialState = {
     selectedArticle: null
 };
 
-export const articleReducer = (state = initialState, action) => {
+const articleReducer = (state = initialState, action) => {
     switch (action.type) {
         case FETCH_ARTICLES_REQUEST:
             return {
@@ -35,12 +35,10 @@ export const articleReducer = (state = initialState, action) => {
         case FETCH_ARTICLES_SUCCESS:
             return {
                 ...state,
-                loading: false,
-                articles: action.payload.currentPage === 1
-                    ? action.payload.articles
-                    : [...state.articles, ...action.payload.articles],
+                articles: action.payload.articles,
                 currentPage: action.payload.currentPage,
                 totalPages: action.payload.totalPages,
+                loading: false,
                 error: null
             };
         case FETCH_ARTICLES_FAILURE:
@@ -88,14 +86,16 @@ export const articleReducer = (state = initialState, action) => {
             return {
                 ...state,
                 articles: state.articles.filter(article => article._id !== action.payload),
-                savedArticles: state.savedArticles.filter(article => article._id !== action.payload)
+                savedArticles: state.savedArticles.filter(article => article._id !== action.payload),
+                loading: false,
+                error: null
             };
         case DELETE_ARTICLE_FAILURE:
             return {
                 ...state,
-                error: action.payload
+                error: action.payload,
+                loading: false
             };
-
         case SET_SELECTED_ARTICLE:
             return {
                 ...state,
@@ -119,3 +119,5 @@ export const articleReducer = (state = initialState, action) => {
             return state;
     }
 };
+
+export default articleReducer;

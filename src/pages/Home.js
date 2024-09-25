@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import {
     Box, VStack, Heading, Container, Text, Image,
     Alert, AlertIcon, AlertTitle, AlertDescription,
-    Flex, Button, useToast, AlertDialog, AlertDialogBody, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogContent, AlertDialogOverlay,
-    useColorModeValue, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton,
+    Flex, Button, useToast, useColorModeValue,
+    AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
+    AlertDialogContent, AlertDialogOverlay,
+    Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton,
     Link
 } from "@chakra-ui/react";
 import { ExternalLinkIcon } from '@chakra-ui/icons';
@@ -24,10 +25,9 @@ function Home() {
     const navigate = useNavigate();
     const toast = useToast();
     const { articles, error, totalPages, loading, currentPage } = useSelector(state => state.articles);
-    const [isUnsaveDialogOpen, setIsUnsaveDialogOpen] = useState(false);
+
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isReadModalOpen, setIsReadModalOpen] = useState(false);
-    const [articleToUnsave, setArticleToUnsave] = useState(null);
     const [articleToDelete, setArticleToDelete] = useState(null);
     const [selectedArticle, setSelectedArticle] = useState(null);
     const cancelRef = useRef();
@@ -70,40 +70,26 @@ function Home() {
     }, [dispatch, toast]);
 
     const handleUnsaveArticle = useCallback((article) => {
-        setArticleToUnsave(article);
-        setIsUnsaveDialogOpen(true);
-    }, []);
-
-    const confirmUnsave = () => {
-        if (articleToUnsave) {
-            dispatch(unsaveArticleAction(articleToUnsave)).then((result) => {
-                if (result.success) {
-                    toast({
-                        title: "Article unsaved",
-                        description: result.message,
-                        status: "success",
-                        duration: 2000,
-                        isClosable: true,
-                    });
-                }
-            }).catch((error) => {
+        dispatch(unsaveArticleAction(article)).then((result) => {
+            if (result.success) {
                 toast({
-                    title: "Error unsaving article",
-                    description: error.message || "An unexpected error occurred.",
-                    status: "error",
-                    duration: 3000,
+                    title: "Article unsaved",
+                    description: result.message,
+                    status: "success",
+                    duration: 2000,
                     isClosable: true,
                 });
+            }
+        }).catch((error) => {
+            toast({
+                title: "Error unsaving article",
+                description: error.message || "An unexpected error occurred.",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
             });
-        }
-        setIsUnsaveDialogOpen(false);
-        setArticleToUnsave(null);
-    };
-
-    const cancelUnsave = () => {
-        setIsUnsaveDialogOpen(false);
-        setArticleToUnsave(null);
-    };
+        });
+    }, [dispatch, toast]);
 
     const handleDeleteArticle = useCallback((article) => {
         setArticleToDelete(article);
@@ -210,33 +196,6 @@ function Home() {
                         </Flex>
                     </VStack>
                 </Container>
-
-                <AlertDialog
-                    isOpen={isUnsaveDialogOpen}
-                    leastDestructiveRef={cancelRef}
-                    onClose={cancelUnsave}
-                >
-                    <AlertDialogOverlay>
-                        <AlertDialogContent>
-                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                                Unsave Article
-                            </AlertDialogHeader>
-
-                            <AlertDialogBody>
-                                Are you sure you want to unsave this article? This action cannot be undone.
-                            </AlertDialogBody>
-
-                            <AlertDialogFooter>
-                                <Button ref={cancelRef} onClick={cancelUnsave}>
-                                    Cancel
-                                </Button>
-                                <Button colorScheme="red" onClick={confirmUnsave} ml={3}>
-                                    Unsave
-                                </Button>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialogOverlay>
-                </AlertDialog>
 
                 <AlertDialog
                     isOpen={isDeleteDialogOpen}
