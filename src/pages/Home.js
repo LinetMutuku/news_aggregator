@@ -87,8 +87,10 @@ function Home() {
                         duration: 2000,
                         isClosable: true,
                     });
-                    // Remove the unsaved article from the current articles list
-                    const updatedArticles = articles.filter(a => a._id !== articleToUnsave._id);
+                    // Update the article's saved status in the frontend
+                    const updatedArticles = articles.map(a =>
+                        a._id === articleToUnsave._id ? { ...a, isSaved: false } : a
+                    );
                     dispatch({ type: 'SET_ARTICLES', payload: updatedArticles });
                 }
             }).catch((error) => {

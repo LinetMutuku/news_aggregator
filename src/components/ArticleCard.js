@@ -1,65 +1,28 @@
-import React, { useState } from 'react';
-import { Box, Image, Badge, Text, Heading, Flex, Button, useColorModeValue, useToast } from "@chakra-ui/react";
+import React from 'react';
+import { Box, Image, Badge, Text, Heading, Flex, Button, useColorModeValue } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 const ArticleCard = ({ article, onSave, onUnsave, onRead, isSavedPage }) => {
-    const [isSaved, setIsSaved] = useState(article.isSaved || false);
     const bgColor = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.700', 'gray.100');
     const descriptionColor = useColorModeValue('gray.600', 'gray.300');
     const sourceColor = useColorModeValue('gray.500', 'gray.400');
-    const toast = useToast();
 
     const handleSave = (e) => {
         e.stopPropagation();
-        if (article._id || article.articleId) {
-            onSave(article);
-            setIsSaved(true);
-        } else {
-            console.error('Attempted to save an article with missing ID:', article);
-            toast({
-                title: "Error",
-                description: "Unable to save this article due to a missing ID.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        }
+        onSave(article);
     };
 
     const handleUnsave = (e) => {
         e.stopPropagation();
-        if (article._id || article.articleId) {
-            onUnsave(article);
-            setIsSaved(false);
-        } else {
-            console.error('Attempted to unsave an article with missing ID:', article);
-            toast({
-                title: "Error",
-                description: "Unable to unsave this article due to a missing ID.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        }
+        onUnsave(article);
     };
 
     const handleRead = () => {
         if (onRead) {
-            if (article._id || article.articleId) {
-                onRead(article);
-            } else {
-                console.error('Attempted to read an article with missing ID:', article);
-                toast({
-                    title: "Error",
-                    description: "Unable to read this article due to a missing ID.",
-                    status: "error",
-                    duration: 3000,
-                    isClosable: true,
-                });
-            }
+            onRead(article);
         }
     };
 
@@ -97,25 +60,36 @@ const ArticleCard = ({ article, onSave, onUnsave, onRead, isSavedPage }) => {
                     </Badge>
                     <Flex>
                         {!isSavedPage && (
+                            <>
+                                <Button
+                                    size="sm"
+                                    colorScheme="blue"
+                                    onClick={handleSave}
+                                    variant="outline"
+                                    mr={2}
+                                >
+                                    Save
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    colorScheme="red"
+                                    onClick={handleUnsave}
+                                    variant="outline"
+                                >
+                                    Unsave
+                                </Button>
+                            </>
+                        )}
+                        {isSavedPage && (
                             <Button
                                 size="sm"
-                                colorScheme="blue"
-                                onClick={handleSave}
+                                colorScheme="red"
+                                onClick={handleUnsave}
                                 variant="outline"
-                                mr={2}
-                                isDisabled={isSaved}
                             >
-                                {isSaved ? "Saved" : "Save"}
+                                Unsave
                             </Button>
                         )}
-                        <Button
-                            size="sm"
-                            colorScheme="red"
-                            onClick={handleUnsave}
-                            variant="outline"
-                        >
-                            Unsave
-                        </Button>
                     </Flex>
                 </Flex>
 

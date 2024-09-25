@@ -81,7 +81,6 @@ export const saveArticleAction = (article) => async (dispatch) => {
 };
 
 export const setSelectedArticle = (articleId) => async (dispatch) => {
-    console.log('setSelectedArticle called with id:', articleId);
     try {
         if (!articleId) {
             console.warn('Attempted to set selected article with null/undefined id');
@@ -106,7 +105,6 @@ export const setSelectedArticle = (articleId) => async (dispatch) => {
 };
 
 export const fetchSavedArticles = () => async (dispatch) => {
-    console.log('fetchSavedArticles called');
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
         const savedArticles = await api.getSavedArticles();
