@@ -105,7 +105,7 @@ export const searchSavedArticles = (query) => apiCall('get', '/users/saved-artic
 export const saveArticle = async (article) => {
     console.log('Saving article:', article);
     try {
-        const response = await apiCall('post', '/users/save-article', { articleId: article._id, articleData: article });
+        const response = await apiCall('post', '/users/save-article', { articleId: article._id });
         console.log('Article saved successfully:', response);
         return response;
     } catch (error) {
@@ -117,7 +117,7 @@ export const saveArticle = async (article) => {
 export const unsaveArticle = async (articleId) => {
     console.log('Unsaving article with ID:', articleId);
     try {
-        const response = await apiCall('delete', `/users/save-article/${articleId}`);
+        const response = await apiCall('delete', `/users/unsave-article/${articleId}`);
         console.log('Article unsaved successfully:', response);
         return response;
     } catch (error) {

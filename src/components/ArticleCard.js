@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
-const ArticleCard = ({ article, onSave, onUnsave, onRead, isSavedPage }) => {
+const ArticleCard = ({ article, onSave, onUnsave, onDelete, onRead, isSavedPage }) => {
     const bgColor = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.700', 'gray.100');
     const descriptionColor = useColorModeValue('gray.600', 'gray.300');
@@ -18,6 +18,11 @@ const ArticleCard = ({ article, onSave, onUnsave, onRead, isSavedPage }) => {
     const handleUnsave = (e) => {
         e.stopPropagation();
         onUnsave(article);
+    };
+
+    const handleDelete = (e) => {
+        e.stopPropagation();
+        onDelete(article);
     };
 
     const handleRead = () => {
@@ -73,10 +78,10 @@ const ArticleCard = ({ article, onSave, onUnsave, onRead, isSavedPage }) => {
                                 <Button
                                     size="sm"
                                     colorScheme="red"
-                                    onClick={handleUnsave}
+                                    onClick={handleDelete}
                                     variant="outline"
                                 >
-                                    Unsave
+                                    Delete
                                 </Button>
                             </>
                         )}

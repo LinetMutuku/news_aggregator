@@ -3,26 +3,23 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
     Box, VStack, Heading, Text, useToast, Spinner,
     Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement,
-    AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
-    AlertDialogContent, AlertDialogOverlay, Button, Modal, ModalOverlay,
-    ModalContent, ModalCloseButton, ModalBody, Alert, AlertIcon, Flex
+    Button, Alert, AlertIcon, Flex, AlertDialog, AlertDialogBody, AlertDialogFooter,
+    AlertDialogHeader, AlertDialogContent, AlertDialogOverlay
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
-import ArticleDetail from '../components/ArticleDetail';
-import { fetchSavedArticles, unsaveArticleAction, searchSavedArticlesAction, setSelectedArticle } from '../redux/actions/articleActions';
+import { fetchSavedArticles, unsaveArticleAction, searchSavedArticlesAction } from '../redux/actions/articleActions';
 import useDebounce from '../hooks/useDebounce';
 
 function SavedArticles() {
     const dispatch = useDispatch();
     const { savedArticles, loading, error } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [articleToUnsave, setArticleToUnsave] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const toast = useToast();
-    const cancelRef = useRef();
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
+    const [isUnsaveDialogOpen, setIsUnsaveDialogOpen] = useState(false);
+    const [articleToUnsave, setArticleToUnsave] = useState(null);
+    const cancelRef = useRef();
 
     const [currentPage, setCurrentPage] = useState(1);
     const articlesPerPage = 20;
@@ -57,25 +54,13 @@ function SavedArticles() {
     }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
 
     const handleUnsave = useCallback((article) => {
-        if (article && article._id) {
-            setArticleToUnsave(article);
-            setIsDeleteDialogOpen(true);
-        } else {
-            console.error('Attempted to unsave an article with missing ID:', article);
-            toast({
-                title: "Error",
-                description: "Unable to unsave this article due to a missing ID.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        }
-    }, [toast]);
+        setArticleToUnsave(article);
+        setIsUnsaveDialogOpen(true);
+    }, []);
 
-    const handleUnsaveConfirm = async () => {
-        if (articleToUnsave && articleToUnsave._id) {
-            try {
-                const result = await dispatch(unsaveArticleAction(articleToUnsave));
+    const confirmUnsave = () => {
+        if (articleToUnsave) {
+            dispatch(unsaveArticleAction(articleToUnsave)).then((result) => {
                 if (result.success) {
                     toast({
                         title: "Article unsaved",
@@ -84,9 +69,9 @@ function SavedArticles() {
                         duration: 3000,
                         isClosable: true,
                     });
+                    loadSavedArticles();
                 }
-            } catch (error) {
-                console.error('Error unsaving article:', error);
+            }).catch((error) => {
                 toast({
                     title: "Error unsaving article",
                     description: error.message || "An unexpected error occurred. Please try again.",
@@ -94,28 +79,16 @@ function SavedArticles() {
                     duration: 5000,
                     isClosable: true,
                 });
-            }
-        } else {
-            console.error('No article to unsave or article ID is undefined');
+            });
         }
-        setIsDeleteDialogOpen(false);
+        setIsUnsaveDialogOpen(false);
         setArticleToUnsave(null);
     };
 
-    const handleUnsaveCancel = () => {
-        setIsDeleteDialogOpen(false);
+    const cancelUnsave = () => {
+        setIsUnsaveDialogOpen(false);
         setArticleToUnsave(null);
     };
-
-    const handleReadArticle = useCallback((article) => {
-        dispatch(setSelectedArticle(article._id));
-        setIsModalOpen(true);
-    }, [dispatch]);
-
-    const handleCloseModal = useCallback(() => {
-        setIsModalOpen(false);
-        dispatch(setSelectedArticle(null));
-    }, [dispatch]);
 
     const handleClearSearch = () => {
         setSearchQuery('');
@@ -145,8 +118,7 @@ function SavedArticles() {
         <Box bg={bgColor} minHeight="100vh">
             <Container maxW="container.xl">
                 <VStack spacing={8} align="stretch" py={8}>
-                    <Heading textAlign="center" fontSize={{ base: "3xl",
-                        md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
+                    <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
                         Your Saved Articles
                     </Heading>
                     <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
@@ -180,9 +152,8 @@ function SavedArticles() {
                         <ArticleGrid
                             articles={currentArticles}
                             onUnsave={handleUnsave}
-                            onRead={handleReadArticle}
-                            showUnsaveButton={true}
                             loading={loading}
+                            isSavedPage={true}
                         />
                     </Fade>
                     {savedArticles.length > articlesPerPage && (
@@ -210,9 +181,9 @@ function SavedArticles() {
             </Container>
 
             <AlertDialog
-                isOpen={isDeleteDialogOpen}
+                isOpen={isUnsaveDialogOpen}
                 leastDestructiveRef={cancelRef}
-                onClose={handleUnsaveCancel}
+                onClose={cancelUnsave}
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent>
@@ -225,25 +196,16 @@ function SavedArticles() {
                         </AlertDialogBody>
 
                         <AlertDialogFooter>
-                            <Button ref={cancelRef} onClick={handleUnsaveCancel}>
+                            <Button ref={cancelRef} onClick={cancelUnsave}>
                                 Cancel
                             </Button>
-                            <Button colorScheme="red" onClick={handleUnsaveConfirm} ml={3}>
+                            <Button colorScheme="red" onClick={confirmUnsave} ml={3}>
                                 Unsave
                             </Button>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} size="xl">
-                <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
-                <ModalContent maxW="800px" w="95%" mx="auto" my="4" borderRadius="lg" overflow="hidden">
-                    <ModalCloseButton zIndex="1" />
-                    <ModalBody p={0}>
-                        <ArticleDetail />
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
         </Box>
     );
 }

@@ -15,12 +15,9 @@ export const SEARCH_SAVED_ARTICLES = 'SEARCH_SAVED_ARTICLES';
 
 // Action Creators
 export const fetchArticles = (page = 1) => async (dispatch) => {
-    const pageSize = 20;
-
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
-        const response = await api.getRecommendedArticles(page, pageSize);
-
+        const response = await api.getRecommendedArticles(page);
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
             payload: {
@@ -56,6 +53,7 @@ export const searchArticlesAction = (query, page = 1, limit = 20) => async (disp
         });
     }
 };
+
 export const saveArticleAction = (article) => async (dispatch) => {
     console.log('saveArticleAction called with article:', article);
     try {
@@ -71,7 +69,6 @@ export const saveArticleAction = (article) => async (dispatch) => {
         return savedArticle;
     } catch (error) {
         console.error('Error in saveArticleAction:', error);
-        console.error('Error details:', error.response?.data);
         dispatch({
             type: SAVE_ARTICLE_FAILURE,
             payload: error.response?.data?.message || error.message || 'Failed to save article'
@@ -79,54 +76,6 @@ export const saveArticleAction = (article) => async (dispatch) => {
         throw error;
     }
 };
-
-export const setSelectedArticle = (articleId) => async (dispatch) => {
-    try {
-        if (!articleId) {
-            console.warn('Attempted to set selected article with null/undefined id');
-            dispatch({
-                type: SET_SELECTED_ARTICLE,
-                payload: null
-            });
-            return;
-        }
-
-        dispatch({
-            type: SET_SELECTED_ARTICLE,
-            payload: articleId
-        });
-    } catch (error) {
-        console.error('Error in setSelectedArticle:', error);
-        dispatch({
-            type: SET_SELECTED_ARTICLE,
-            payload: null
-        });
-    }
-};
-
-export const fetchSavedArticles = () => async (dispatch) => {
-    dispatch({ type: FETCH_ARTICLES_REQUEST });
-    try {
-        const savedArticles = await api.getSavedArticles();
-        console.log('Saved articles received:', savedArticles);
-        if (!Array.isArray(savedArticles)) {
-            throw new Error('Received invalid data structure for saved articles');
-        }
-        dispatch({
-            type: FETCH_SAVED_ARTICLES,
-            payload: savedArticles
-        });
-    } catch (error) {
-        console.error('Error in fetchSavedArticles:', error);
-        dispatch({
-            type: FETCH_ARTICLES_FAILURE,
-            payload: error.message || 'Failed to fetch saved articles'
-        });
-        throw error;
-    }
-};
-
-
 
 export const unsaveArticleAction = (article) => async (dispatch) => {
     console.log('unsaveArticleAction called with article:', article);
@@ -145,11 +94,37 @@ export const unsaveArticleAction = (article) => async (dispatch) => {
         return { success: true, message: response.message || 'Article unsaved successfully' };
     } catch (error) {
         console.error('Error unsaving article:', error);
+        dispatch({
+            type: UNSAVE_ARTICLE_FAILURE,
+            payload: error.message || 'Failed to unsave article'
+        });
         throw error;
     }
 };
 
+export const setSelectedArticle = (articleId) => ({
+    type: SET_SELECTED_ARTICLE,
+    payload: articleId,
+});
 
+export const fetchSavedArticles = () => async (dispatch) => {
+    dispatch({ type: FETCH_ARTICLES_REQUEST });
+    try {
+        const savedArticles = await api.getSavedArticles();
+        console.log('Saved articles received:', savedArticles);
+        dispatch({
+            type: FETCH_SAVED_ARTICLES,
+            payload: savedArticles
+        });
+    } catch (error) {
+        console.error('Error in fetchSavedArticles:', error);
+        dispatch({
+            type: FETCH_ARTICLES_FAILURE,
+            payload: error.message || 'Failed to fetch saved articles'
+        });
+        throw error;
+    }
+};
 
 export const searchSavedArticlesAction = (query) => async (dispatch) => {
     console.log('searchSavedArticlesAction called with query:', query);
@@ -157,9 +132,6 @@ export const searchSavedArticlesAction = (query) => async (dispatch) => {
     try {
         const response = await api.searchSavedArticles(query);
         console.log('Saved articles search response:', response);
-        if (!Array.isArray(response)) {
-            throw new Error('Received invalid data structure from saved articles search API');
-        }
         dispatch({
             type: SEARCH_SAVED_ARTICLES,
             payload: response

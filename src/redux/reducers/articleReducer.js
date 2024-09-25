@@ -17,8 +17,7 @@ const initialState = {
     savedArticles: [],
     loading: false,
     error: null,
-    hasMore: true,
-    page: 1,
+    currentPage: 1,
     totalPages: 0,
     selectedArticle: null
 };
@@ -32,17 +31,13 @@ export const articleReducer = (state = initialState, action) => {
                 error: null
             };
         case FETCH_ARTICLES_SUCCESS:
-            const newArticles = action.payload.articles.filter(
-                newArticle => !state.articles.some(existingArticle => existingArticle._id === newArticle._id)
-            );
             return {
                 ...state,
                 loading: false,
                 articles: action.payload.currentPage === 1
-                    ? newArticles
-                    : [...state.articles, ...newArticles],
-                hasMore: action.payload.hasMore,
-                page: action.payload.currentPage + 1,
+                    ? action.payload.articles
+                    : [...state.articles, ...action.payload.articles],
+                currentPage: action.payload.currentPage,
                 totalPages: action.payload.totalPages,
                 error: null
             };
@@ -57,8 +52,7 @@ export const articleReducer = (state = initialState, action) => {
                 ...state,
                 loading: false,
                 articles: action.payload.articles,
-                hasMore: action.payload.currentPage < action.payload.totalPages,
-                page: action.payload.currentPage + 1,
+                currentPage: action.payload.currentPage,
                 totalPages: action.payload.totalPages,
                 error: null
             };

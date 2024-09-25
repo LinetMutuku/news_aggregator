@@ -4,14 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import {
     Box, VStack, Heading, Container, Text,
     Alert, AlertIcon, AlertTitle, AlertDescription,
-    Flex, Button, useToast, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody,
-    useColorModeValue, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
-    AlertDialogContent, AlertDialogOverlay
+    Flex, Button, useToast, AlertDialog, AlertDialogBody, AlertDialogFooter,
+    AlertDialogHeader, AlertDialogContent, AlertDialogOverlay,
+    useColorModeValue
 } from "@chakra-ui/react";
-import { fetchArticles, searchArticlesAction, saveArticleAction, unsaveArticleAction, setSelectedArticle } from '../redux/actions/articleActions';
+import { fetchArticles, searchArticlesAction, saveArticleAction, unsaveArticleAction } from '../redux/actions/articleActions';
 import Search from '../components/Search';
 import ArticleGrid from '../components/ArticleGrid';
-import ArticleDetail from '../components/ArticleDetail';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 function Home() {
@@ -22,9 +21,7 @@ function Home() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const toast = useToast();
-    const { articles, error, totalPages, loading } = useSelector(state => state.articles);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const { articles, error, totalPages, loading, currentPage } = useSelector(state => state.articles);
     const [isUnsaveDialogOpen, setIsUnsaveDialogOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
     const cancelRef = useRef();
@@ -55,11 +52,6 @@ function Home() {
                 duration: 2000,
                 isClosable: true,
             });
-            // Update the article's saved status in the frontend
-            const updatedArticles = articles.map(a =>
-                a._id === article._id ? { ...a, isSaved: true } : a
-            );
-            dispatch({ type: 'SET_ARTICLES', payload: updatedArticles });
         }).catch((error) => {
             toast({
                 title: "Error saving article",
@@ -69,7 +61,7 @@ function Home() {
                 isClosable: true,
             });
         });
-    }, [dispatch, toast, articles]);
+    }, [dispatch, toast]);
 
     const handleUnsaveArticle = useCallback((article) => {
         setArticleToUnsave(article);
@@ -87,11 +79,6 @@ function Home() {
                         duration: 2000,
                         isClosable: true,
                     });
-                    // Update the article's saved status in the frontend
-                    const updatedArticles = articles.map(a =>
-                        a._id === articleToUnsave._id ? { ...a, isSaved: false } : a
-                    );
-                    dispatch({ type: 'SET_ARTICLES', payload: updatedArticles });
                 }
             }).catch((error) => {
                 toast({
@@ -112,24 +99,11 @@ function Home() {
         setArticleToUnsave(null);
     };
 
-    const handleReadArticle = useCallback((article) => {
-        dispatch(setSelectedArticle(article._id));
-        setIsModalOpen(true);
-    }, [dispatch]);
-
-    const handleCloseModal = useCallback(() => {
-        setIsModalOpen(false);
-        dispatch(setSelectedArticle(null));
-    }, [dispatch]);
-
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
             loadArticles(newPage);
         }
     };
-
-    const pageArticles = articles.slice((currentPage - 1) * 20, currentPage * 20);
 
     return (
         <ErrorBoundary>
@@ -154,10 +128,9 @@ function Home() {
                         )}
 
                         <ArticleGrid
-                            articles={pageArticles}
+                            articles={articles}
                             onSave={handleSaveArticle}
                             onUnsave={handleUnsaveArticle}
-                            onRead={handleReadArticle}
                             loading={loading}
                             isSavedPage={false}
                         />
@@ -183,15 +156,7 @@ function Home() {
                         </Flex>
                     </VStack>
                 </Container>
-                <Modal isOpen={isModalOpen} onClose={handleCloseModal} size="xl">
-                    <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
-                    <ModalContent maxW="800px" w="95%" mx="auto" my="4" borderRadius="lg" overflow="hidden">
-                        <ModalCloseButton zIndex="1" />
-                        <ModalBody p={0}>
-                            <ArticleDetail />
-                        </ModalBody>
-                    </ModalContent>
-                </Modal>
+
                 <AlertDialog
                     isOpen={isUnsaveDialogOpen}
                     leastDestructiveRef={cancelRef}
