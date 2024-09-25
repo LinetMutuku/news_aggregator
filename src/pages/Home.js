@@ -2,12 +2,14 @@ import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
-    Box, VStack, Heading, Container, Text,
+    Box, VStack, Heading, Container, Text, Image,
     Alert, AlertIcon, AlertTitle, AlertDescription,
     Flex, Button, useToast, AlertDialog, AlertDialogBody, AlertDialogFooter,
     AlertDialogHeader, AlertDialogContent, AlertDialogOverlay,
-    useColorModeValue, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton
+    useColorModeValue, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton,
+    Link
 } from "@chakra-ui/react";
+import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { fetchArticles, searchArticlesAction, saveArticleAction, unsaveArticleAction, deleteArticleAction } from '../redux/actions/articleActions';
 import Search from '../components/Search';
 import ArticleGrid from '../components/ArticleGrid';
@@ -265,14 +267,28 @@ function Home() {
 
                 <Modal isOpen={isReadModalOpen} onClose={handleCloseReadModal} size="xl">
                     <ModalOverlay />
-                    <ModalContent>
+                    <ModalContent maxW="900px">
                         <ModalHeader>{selectedArticle?.title}</ModalHeader>
                         <ModalCloseButton />
                         <ModalBody>
+                            {selectedArticle?.imageUrl && (
+                                <Image
+                                    src={selectedArticle.imageUrl}
+                                    alt={selectedArticle.title}
+                                    maxH="400px"
+                                    w="100%"
+                                    objectFit="cover"
+                                    mb={4}
+                                />
+                            )}
+                            <Text fontSize="lg" mb={4}>{selectedArticle?.description}</Text>
                             <Text>{selectedArticle?.content}</Text>
                         </ModalBody>
                         <ModalFooter>
-                            <Button colorScheme="blue" mr={3} onClick={handleCloseReadModal}>
+                            <Link href={selectedArticle?.url} isExternal mr={3}>
+                                Read Original Article <ExternalLinkIcon mx="2px" />
+                            </Link>
+                            <Button colorScheme="blue" onClick={handleCloseReadModal}>
                                 Close
                             </Button>
                         </ModalFooter>

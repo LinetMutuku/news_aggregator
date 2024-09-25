@@ -26,9 +26,7 @@ const ArticleCard = ({ article, onSave, onUnsave, onDelete, onRead, isSavedPage 
     };
 
     const handleRead = () => {
-        if (onRead) {
-            onRead(article);
-        }
+        onRead(article);
     };
 
     const imageUrl = article.urlToImage || article.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
