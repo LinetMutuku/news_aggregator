@@ -103,15 +103,20 @@ export const fetchSavedArticles = () => async (dispatch) => {
     }
 };
 
-export const deleteArticleAction = (articleId) => async (dispatch) => {
+export const deleteArticleAction = (articleId) => async (dispatch, getState) => {
     console.log('deleteArticleAction called with articleId:', articleId);
     try {
         const response = await api.deleteArticle(articleId);
         console.log('Delete response:', response);
+
         dispatch({
             type: DELETE_ARTICLE,
             payload: articleId
         });
+
+        const { currentPage } = getState().articles;
+        dispatch(fetchArticles(currentPage));
+
         return { success: true, message: response.message || 'Article deleted successfully' };
     } catch (error) {
         console.error('Error deleting article:', error);
