@@ -114,6 +114,18 @@ export const saveArticle = async (article) => {
     }
 };
 
+export const deleteArticle = async (articleId) => {
+    console.log('Deleting article with ID:', articleId);
+    try {
+        const response = await apiCall('delete', `/users/delete-article/${articleId}`);
+        console.log('Article deleted successfully:', response);
+        return response;
+    } catch (error) {
+        console.error('Error deleting article:', error.response?.data || error.message);
+        throw error;
+    }
+};
+
 export const unsaveArticle = async (articleId) => {
     console.log('Unsaving article with ID:', articleId);
     try {
@@ -121,14 +133,12 @@ export const unsaveArticle = async (articleId) => {
         console.log('Article unsaved successfully:', response);
         return response;
     } catch (error) {
-        if (error.response && error.response.status === 404) {
-            console.log('Article not found, considering it already unsaved');
-            return { message: 'Article was already unsaved' };
-        }
         console.error('Error unsaving article:', error.response?.data || error.message);
         throw error;
     }
 };
+
+
 
 // User Profile
 export const getUserProfile = () => apiCall('get', '/users/profile');

@@ -7,6 +7,8 @@ import {
     SAVE_ARTICLE_FAILURE,
     UNSAVE_ARTICLE,
     UNSAVE_ARTICLE_FAILURE,
+    DELETE_ARTICLE,
+    DELETE_ARTICLE_FAILURE,
     SET_SELECTED_ARTICLE,
     FETCH_SAVED_ARTICLES,
     SEARCH_SAVED_ARTICLES
@@ -82,6 +84,18 @@ export const articleReducer = (state = initialState, action) => {
                 ...state,
                 error: action.payload
             };
+        case DELETE_ARTICLE:
+            return {
+                ...state,
+                articles: state.articles.filter(article => article._id !== action.payload),
+                savedArticles: state.savedArticles.filter(article => article._id !== action.payload)
+            };
+        case DELETE_ARTICLE_FAILURE:
+            return {
+                ...state,
+                error: action.payload
+            };
+
         case SET_SELECTED_ARTICLE:
             return {
                 ...state,

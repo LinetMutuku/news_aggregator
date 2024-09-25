@@ -8,7 +8,7 @@ import {
     AlertDialogHeader, AlertDialogContent, AlertDialogOverlay,
     useColorModeValue
 } from "@chakra-ui/react";
-import { fetchArticles, searchArticlesAction, saveArticleAction, unsaveArticleAction } from '../redux/actions/articleActions';
+import { fetchArticles, searchArticlesAction, saveArticleAction, unsaveArticleAction, deleteArticleAction } from '../redux/actions/articleActions';
 import Search from '../components/Search';
 import ArticleGrid from '../components/ArticleGrid';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -23,7 +23,9 @@ function Home() {
     const toast = useToast();
     const { articles, error, totalPages, loading, currentPage } = useSelector(state => state.articles);
     const [isUnsaveDialogOpen, setIsUnsaveDialogOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
+    const [articleToDelete, setArticleToDelete] = useState(null);
     const cancelRef = useRef();
 
     const loadArticles = useCallback((page) => {
@@ -99,6 +101,42 @@ function Home() {
         setArticleToUnsave(null);
     };
 
+    const handleDeleteArticle = useCallback((article) => {
+        setArticleToDelete(article);
+        setIsDeleteDialogOpen(true);
+    }, []);
+
+    const confirmDelete = () => {
+        if (articleToDelete) {
+            dispatch(deleteArticleAction(articleToDelete._id)).then((result) => {
+                if (result.success) {
+                    toast({
+                        title: "Article deleted",
+                        description: result.message,
+                        status: "success",
+                        duration: 2000,
+                        isClosable: true,
+                    });
+                }
+            }).catch((error) => {
+                toast({
+                    title: "Error deleting article",
+                    description: error.message || "An unexpected error occurred.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            });
+        }
+        setIsDeleteDialogOpen(false);
+        setArticleToDelete(null);
+    };
+
+    const cancelDelete = () => {
+        setIsDeleteDialogOpen(false);
+        setArticleToDelete(null);
+    };
+
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             loadArticles(newPage);
@@ -131,6 +169,7 @@ function Home() {
                             articles={articles}
                             onSave={handleSaveArticle}
                             onUnsave={handleUnsaveArticle}
+                            onDelete={handleDeleteArticle}
                             loading={loading}
                             isSavedPage={false}
                         />
@@ -178,6 +217,33 @@ function Home() {
                                 </Button>
                                 <Button colorScheme="red" onClick={confirmUnsave} ml={3}>
                                     Unsave
+                                </Button>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialogOverlay>
+                </AlertDialog>
+
+                <AlertDialog
+                    isOpen={isDeleteDialogOpen}
+                    leastDestructiveRef={cancelRef}
+                    onClose={cancelDelete}
+                >
+                    <AlertDialogOverlay>
+                        <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                Delete Article
+                            </AlertDialogHeader>
+
+                            <AlertDialogBody>
+                                Are you sure you want to delete this article? This action cannot be undone.
+                            </AlertDialogBody>
+
+                            <AlertDialogFooter>
+                                <Button ref={cancelRef} onClick={cancelDelete}>
+                                    Cancel
+                                </Button>
+                                <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                                    Delete
                                 </Button>
                             </AlertDialogFooter>
                         </AlertDialogContent>
