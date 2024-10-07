@@ -20,10 +20,14 @@ export const fetchArticles = (page = 1) => async (dispatch) => {
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
         const response = await api.getRecommendedArticles(page);
+        const deletedArticles = JSON.parse(localStorage.getItem('deletedArticles') || '[]');
+        const filteredArticles = response.recommendations.filter(article =>
+            !deletedArticles.includes(article._id)
+        );
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
             payload: {
-                articles: response.recommendations,
+                articles: filteredArticles,
                 currentPage: page,
                 totalPages: response.totalPages,
             }
@@ -109,6 +113,11 @@ export const deleteArticleAction = (articleId) => async (dispatch) => {
         const response = await api.deleteArticle(articleId);
         console.log('Delete response:', response);
 
+        // Add the deleted article ID to localStorage
+        const deletedArticles = JSON.parse(localStorage.getItem('deletedArticles') || '[]');
+        deletedArticles.push(articleId);
+        localStorage.setItem('deletedArticles', JSON.stringify(deletedArticles));
+
         dispatch({
             type: DELETE_ARTICLE,
             payload: articleId
@@ -117,6 +126,14 @@ export const deleteArticleAction = (articleId) => async (dispatch) => {
         return { success: true, message: response.message || 'Article deleted successfully' };
     } catch (error) {
         console.error('Error deleting article:', error);
+        if (error.response && error.response.status === 404) {
+            // If the article is not found, remove it from the frontend state anyway
+            dispatch({
+                type: DELETE_ARTICLE,
+                payload: articleId
+            });
+            return { success: true, message: 'Article removed from view' };
+        }
         dispatch({
             type: DELETE_ARTICLE_FAILURE,
             payload: error.message || 'Failed to delete article'
@@ -124,6 +141,9 @@ export const deleteArticleAction = (articleId) => async (dispatch) => {
         throw error;
     }
 };
+
+
+
 
 export const unsaveArticleAction = (article) => async (dispatch) => {
     console.log('unsaveArticleAction called with article:', article);
