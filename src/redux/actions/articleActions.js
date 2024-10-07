@@ -103,7 +103,7 @@ export const fetchSavedArticles = () => async (dispatch) => {
     }
 };
 
-export const deleteArticleAction = (articleId) => async (dispatch, getState) => {
+export const deleteArticleAction = (articleId) => async (dispatch) => {
     console.log('deleteArticleAction called with articleId:', articleId);
     try {
         const response = await api.deleteArticle(articleId);
@@ -113,9 +113,6 @@ export const deleteArticleAction = (articleId) => async (dispatch, getState) => 
             type: DELETE_ARTICLE,
             payload: articleId
         });
-
-        const { currentPage } = getState().articles;
-        dispatch(fetchArticles(currentPage));
 
         return { success: true, message: response.message || 'Article deleted successfully' };
     } catch (error) {
@@ -128,13 +125,12 @@ export const deleteArticleAction = (articleId) => async (dispatch, getState) => 
     }
 };
 
-
 export const unsaveArticleAction = (article) => async (dispatch) => {
     console.log('unsaveArticleAction called with article:', article);
     const articleId = article._id;
     if (!articleId) {
         console.error('Attempted to unsave article with undefined id');
-        return { success: false, message: 'Invalid article ID' };
+        return {success: false, message: 'Invalid article ID'};
     }
     try {
         const response = await api.unsaveArticle(articleId);
@@ -143,7 +139,7 @@ export const unsaveArticleAction = (article) => async (dispatch) => {
             type: UNSAVE_ARTICLE,
             payload: articleId
         });
-        return { success: true, message: response.message || 'Article unsaved successfully' };
+        return {success: true, message: response.message || 'Article unsaved successfully'};
     } catch (error) {
         console.error('Error unsaving article:', error);
         dispatch({
@@ -153,9 +149,10 @@ export const unsaveArticleAction = (article) => async (dispatch) => {
         throw error;
     }
 };
+
 export const searchSavedArticlesAction = (query) => async (dispatch) => {
     console.log('searchSavedArticlesAction called with query:', query);
-    dispatch({ type: FETCH_ARTICLES_REQUEST });
+    dispatch({type: FETCH_ARTICLES_REQUEST});
     try {
         const response = await api.searchSavedArticles(query);
         console.log('Saved articles search response:', response);

@@ -1,8 +1,17 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { SimpleGrid, Container, VStack, Text, Spinner, Center } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
+import { fetchArticles } from '../redux/actions/articleActions';
 
-const ArticleGrid = memo(({ articles, onSave, onUnsave, onDelete, onRead, loading, isSavedPage }) => {
+const ArticleGrid = memo(({ onSave, onUnsave, onDelete, onRead, isSavedPage }) => {
+    const dispatch = useDispatch();
+    const { articles, loading } = useSelector(state => state.articles);
+
+    useEffect(() => {
+        dispatch(fetchArticles());
+    }, [dispatch]);
+
     console.log('ArticleGrid rendered with', articles.length, 'articles');
 
     const displayedArticles = articles.slice(0, 20); // Ensure only 20 articles are displayed
@@ -42,11 +51,6 @@ const ArticleGrid = memo(({ articles, onSave, onUnsave, onDelete, onRead, loadin
             </VStack>
         </Container>
     );
-}, (prevProps, nextProps) => {
-    return prevProps.loading === nextProps.loading &&
-        prevProps.articles.length === nextProps.articles.length &&
-        prevProps.articles.every((article, index) => article._id === nextProps.articles[index]._id) &&
-        prevProps.isSavedPage === nextProps.isSavedPage;
 });
 
 ArticleGrid.displayName = 'ArticleGrid';
