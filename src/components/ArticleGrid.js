@@ -2,21 +2,26 @@ import React, { memo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { SimpleGrid, Container, VStack, Text, Spinner, Center } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
-import { fetchArticles } from '../redux/actions/articleActions';
+import { fetchArticles, fetchSavedArticles } from '../redux/actions/articleActions';
 
 const ArticleGrid = memo(({ onSave, onUnsave, onDelete, onRead, isSavedPage }) => {
     const dispatch = useDispatch();
-    const { articles, loading } = useSelector(state => state.articles);
+    const { articles, savedArticles, loading } = useSelector(state => state.articles);
 
     useEffect(() => {
-        dispatch(fetchArticles());
-    }, [dispatch]);
+        if (isSavedPage) {
+            dispatch(fetchSavedArticles());
+        } else {
+            dispatch(fetchArticles());
+        }
+    }, [dispatch, isSavedPage]);
 
-    console.log('ArticleGrid rendered with', articles.length, 'articles');
+    const displayedArticles = isSavedPage ? savedArticles : articles;
+    console.log(`ArticleGrid rendered with ${displayedArticles.length} ${isSavedPage ? 'saved' : ''} articles`);
 
-    const displayedArticles = articles.slice(0, 20); // Ensure only 20 articles are displayed
+    const limitedArticles = displayedArticles.slice(0, 20); // Ensure only 20 articles are displayed
 
-    if (loading && displayedArticles.length === 0) {
+    if (loading && limitedArticles.length === 0) {
         return (
             <Center height="200px">
                 <Spinner size="xl" />
@@ -24,10 +29,14 @@ const ArticleGrid = memo(({ onSave, onUnsave, onDelete, onRead, isSavedPage }) =
         );
     }
 
-    if (!displayedArticles || displayedArticles.length === 0) {
+    if (!limitedArticles || limitedArticles.length === 0) {
         return (
             <Container maxW="container.xl" py={16}>
-                <Text textAlign="center" fontSize="xl">No articles found. Check back later for updates!</Text>
+                <Text textAlign="center" fontSize="xl">
+                    {isSavedPage
+                        ? "You haven't saved any articles yet. Start saving articles to see them here!"
+                        : "No articles found. Check back later for updates!"}
+                </Text>
             </Container>
         );
     }
@@ -36,12 +45,12 @@ const ArticleGrid = memo(({ onSave, onUnsave, onDelete, onRead, isSavedPage }) =
         <Container maxW="container.xl" py={8}>
             <VStack spacing={8} align="stretch">
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={8}>
-                    {displayedArticles.map(article => (
+                    {limitedArticles.map(article => (
                         <ArticleCard
                             key={article._id}
                             article={article}
-                            onSave={onSave}
-                            onUnsave={onUnsave}
+                            onSave={isSavedPage ? null : onSave}
+                            onUnsave={isSavedPage ? onUnsave : null}
                             onDelete={onDelete}
                             onRead={onRead}
                             isSavedPage={isSavedPage}

@@ -4,7 +4,6 @@ import {
     FETCH_ARTICLES_FAILURE,
     SEARCH_ARTICLES,
     SAVE_ARTICLE,
-    SAVE_ARTICLE_FAILURE,
     UNSAVE_ARTICLE,
     UNSAVE_ARTICLE_FAILURE,
     DELETE_ARTICLE,
@@ -62,13 +61,19 @@ const articleReducer = (state = initialState, action) => {
                 articles: state.articles.map(article =>
                     article._id === action.payload._id ? { ...article, isSaved: true } : article
                 ),
-                savedArticles: [...state.savedArticles, action.payload]
+                savedArticles: state.savedArticles.some(article => article._id === action.payload._id)
+                    ? state.savedArticles
+                    : [...state.savedArticles, action.payload]
             };
-        case SAVE_ARTICLE_FAILURE:
+
+        case FETCH_SAVED_ARTICLES:
             return {
                 ...state,
-                error: action.payload
+                savedArticles: action.payload,
+                loading: false,
+                error: null
             };
+
         case UNSAVE_ARTICLE:
             return {
                 ...state,

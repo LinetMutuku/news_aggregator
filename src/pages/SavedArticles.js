@@ -38,8 +38,9 @@ function SavedArticles() {
     }, [dispatch]);
 
     useEffect(() => {
-        loadSavedArticles();
-    }, [loadSavedArticles]);
+        dispatch(fetchSavedArticles());
+    }, [dispatch]);
+
 
     const handleSearch = useCallback((query) => {
         if (!query.trim()) {
@@ -164,7 +165,7 @@ function SavedArticles() {
                     )}
                     <Fade in={true}>
                         <ArticleGrid
-                            articles={currentArticles}
+                            articles={savedArticles}
                             onUnsave={handleUnsave}
                             onRead={handleReadArticle}
                             loading={loading}

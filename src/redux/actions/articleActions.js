@@ -72,6 +72,8 @@ export const saveArticleAction = (article) => async (dispatch) => {
             type: SAVE_ARTICLE,
             payload: savedArticle
         });
+        // Fetch updated list of saved articles
+        dispatch(fetchSavedArticles());
         return savedArticle;
     } catch (error) {
         console.error('Error in saveArticleAction:', error);
@@ -82,6 +84,7 @@ export const saveArticleAction = (article) => async (dispatch) => {
         throw error;
     }
 };
+
 
 export const setSelectedArticle = (articleId) => ({
     type: SET_SELECTED_ARTICLE,
