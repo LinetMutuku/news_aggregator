@@ -1,6 +1,6 @@
 import React, { memo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { SimpleGrid, Container, VStack, Text, Spinner, Center, Button, Flex } from "@chakra-ui/react";
+import { SimpleGrid, Container, VStack, Text, Spinner, Center } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 import { fetchArticles, fetchSavedArticles } from '../redux/actions/articleActions';
 
@@ -14,7 +14,7 @@ const ArticleGrid = memo(({
                               onPageChange
                           }) => {
     const dispatch = useDispatch();
-    const { articles, savedArticles, loading, totalPages } = useSelector(state => state.articles);
+    const { articles, savedArticles, loading } = useSelector(state => state.articles);
 
     useEffect(() => {
         if (isSavedPage) {
@@ -63,28 +63,6 @@ const ArticleGrid = memo(({
                         />
                     ))}
                 </SimpleGrid>
-
-                {totalPages > 1 && (
-                    <Flex justifyContent="center" mt={4}>
-                        <Button
-                            onClick={() => onPageChange(currentPage - 1)}
-                            isDisabled={currentPage === 1}
-                            mr={2}
-                        >
-                            Previous
-                        </Button>
-                        <Text alignSelf="center" mx={2}>
-                            Page {currentPage} of {totalPages}
-                        </Text>
-                        <Button
-                            onClick={() => onPageChange(currentPage + 1)}
-                            isDisabled={currentPage === totalPages}
-                            ml={2}
-                        >
-                            Next
-                        </Button>
-                    </Flex>
-                )}
             </VStack>
         </Container>
     );
