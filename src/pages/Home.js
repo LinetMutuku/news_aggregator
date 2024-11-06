@@ -33,14 +33,17 @@ function Home() {
     const cancelRef = useRef();
 
     const loadArticles = useCallback((page) => {
+        console.log('loadArticles called with page:', page);
         dispatch(fetchArticles(page));
     }, [dispatch]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
+        console.log('Home useEffect - token:', token ? 'exists' : 'missing');
         if (!token) {
             navigate('/login');
         } else {
+            console.log('Calling loadArticles with currentPage:', currentPage);
             loadArticles(currentPage);
         }
     }, [loadArticles, navigate, currentPage]);

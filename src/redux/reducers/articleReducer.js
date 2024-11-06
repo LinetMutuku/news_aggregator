@@ -31,45 +31,56 @@ const articleReducer = (state = initialState, action) => {
                 loading: true,
                 error: null
             };
+
         case FETCH_ARTICLES_SUCCESS:
             return {
                 ...state,
-                articles: action.payload.articles,
+                articles: action.payload.articles || [],
                 currentPage: action.payload.currentPage,
                 totalPages: action.payload.totalPages,
                 loading: false,
                 error: null
             };
+
         case FETCH_ARTICLES_FAILURE:
             return {
                 ...state,
                 loading: false,
                 error: action.payload
             };
+
         case SEARCH_ARTICLES:
             return {
                 ...state,
                 loading: false,
-                articles: action.payload.articles,
+                articles: action.payload.articles || [],
                 currentPage: action.payload.currentPage,
                 totalPages: action.payload.totalPages,
                 error: null
             };
-        case SAVE_ARTICLE:
+
+        case SAVE_ARTICLE: {
+            const isAlreadySaved = state.savedArticles.some(
+                article => article._id === action.payload._id
+            );
+
             return {
                 ...state,
                 articles: state.articles.map(article =>
-                    article._id === action.payload._id ? { ...article, isSaved: true } : article
+                    article._id === action.payload._id
+                        ? { ...article, isSaved: true }
+                        : article
                 ),
-                savedArticles: state.savedArticles.some(article => article._id === action.payload._id)
+                savedArticles: isAlreadySaved
                     ? state.savedArticles
                     : [...state.savedArticles, action.payload]
             };
+        }
 
         case FETCH_SAVED_ARTICLES:
             return {
                 ...state,
-                savedArticles: action.payload,
+                savedArticles: action.payload || [],
                 loading: false,
                 error: null
             };
@@ -77,49 +88,56 @@ const articleReducer = (state = initialState, action) => {
         case UNSAVE_ARTICLE:
             return {
                 ...state,
-                savedArticles: state.savedArticles.filter(article => article._id !== action.payload),
+                savedArticles: state.savedArticles.filter(
+                    article => article._id !== action.payload
+                ),
                 articles: state.articles.map(article =>
-                    article._id === action.payload ? { ...article, isSaved: false } : article
+                    article._id === action.payload
+                        ? { ...article, isSaved: false }
+                        : article
                 )
             };
+
         case UNSAVE_ARTICLE_FAILURE:
             return {
                 ...state,
                 error: action.payload
             };
+
         case DELETE_ARTICLE:
             return {
                 ...state,
-                articles: state.articles.filter(article => article._id !== action.payload),
-                savedArticles: state.savedArticles.filter(article => article._id !== action.payload),
+                articles: state.articles.filter(
+                    article => article._id !== action.payload
+                ),
+                savedArticles: state.savedArticles.filter(
+                    article => article._id !== action.payload
+                ),
                 loading: false,
                 error: null
             };
+
         case DELETE_ARTICLE_FAILURE:
             return {
                 ...state,
                 error: action.payload,
                 loading: false
             };
+
         case SET_SELECTED_ARTICLE:
             return {
                 ...state,
                 selectedArticle: action.payload
             };
-        case FETCH_SAVED_ARTICLES:
-            return {
-                ...state,
-                loading: false,
-                savedArticles: action.payload,
-                error: null
-            };
+
         case SEARCH_SAVED_ARTICLES:
             return {
                 ...state,
                 loading: false,
-                savedArticles: action.payload,
+                savedArticles: action.payload || [],
                 error: null
             };
+
         default:
             return state;
     }

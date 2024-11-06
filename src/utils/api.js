@@ -42,7 +42,7 @@ api.interceptors.response.use((response) => {
     return Promise.reject(error);
 });
 
-// Helper function for API calls
+
 const apiCall = async (method, url, data = null, params = null) => {
     try {
         const response = await api({ method, url, data, params });

@@ -42,91 +42,90 @@ const ArticleCard = ({ article, onSave, onUnsave, onDelete, onRead, isSavedPage 
             bg={bgColor}
             whileHover={{ y: -5, boxShadow: "xl" }}
             transition={{ duration: 0.3 }}
-            onClick={handleRead}
-            cursor="pointer"
             height="100%"
             display="flex"
             flexDirection="column"
         >
-            <Image
-                src={imageUrl}
-                alt={article.title || 'Article image'}
-                objectFit="cover"
-                height="200px"
-                width="100%"
-            />
+            <Box onClick={handleRead} cursor="pointer">
+                <Image
+                    src={imageUrl}
+                    alt={article.title || 'Article image'}
+                    objectFit="cover"
+                    height="200px"
+                    width="100%"
+                />
 
-            <Box p={5} flex="1" display="flex" flexDirection="column">
-                <Flex justifyContent="space-between" alignItems="center" mb={2}>
-                    <Badge borderRadius="full" px="2" colorScheme="teal">
-                        {article.category || 'Uncategorized'}
-                    </Badge>
-                    <Flex>
-                        {!isSavedPage && (
-                            <>
-                                <Button
-                                    size="sm"
-                                    colorScheme="blue"
-                                    onClick={handleSave}
-                                    variant="outline"
-                                    mr={2}
-                                >
-                                    Save
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    colorScheme="red"
-                                    onClick={handleDelete}
-                                    variant="outline"
-                                >
-                                    Delete
-                                </Button>
-                            </>
-                        )}
-                        {isSavedPage && (
-                            <Button
-                                size="sm"
-                                colorScheme="red"
-                                onClick={handleUnsave}
-                                variant="outline"
-                            >
-                                Unsave
-                            </Button>
-                        )}
+                <Box p={5} flex="1" display="flex" flexDirection="column">
+                    <Flex justifyContent="space-between" alignItems="center" mb={2}>
+                        <Badge borderRadius="full" px="2" colorScheme="teal">
+                            {article.category || 'Uncategorized'}
+                        </Badge>
                     </Flex>
-                </Flex>
 
-                <Heading
-                    as="h3"
-                    fontSize="xl"
-                    fontWeight="semibold"
-                    lineHeight="tight"
-                    noOfLines={2}
-                    color={textColor}
-                    mb={2}
-                >
-                    {article.title || 'Untitled Article'}
-                </Heading>
+                    <Heading
+                        as="h3"
+                        fontSize="xl"
+                        fontWeight="semibold"
+                        lineHeight="tight"
+                        noOfLines={2}
+                        color={textColor}
+                        mb={2}
+                    >
+                        {article.title || 'Untitled Article'}
+                    </Heading>
 
-                <Text
-                    color={descriptionColor}
-                    fontSize="sm"
-                    noOfLines={3}
-                    mb={4}
-                    flex="1"
-                >
-                    {article.description || 'No description available'}
-                </Text>
-
-                <Flex justifyContent="space-between" alignItems="center" fontSize="xs" mt="auto">
-                    <Text color={sourceColor} fontWeight="medium">
-                        {sourceName}
+                    <Text
+                        color={descriptionColor}
+                        fontSize="sm"
+                        noOfLines={3}
+                        mb={4}
+                        flex="1"
+                    >
+                        {article.description || 'No description available'}
                     </Text>
-                    <Text color={sourceColor}>
-                        {publishDate}
-                    </Text>
-                </Flex>
+
+                    <Flex justifyContent="space-between" alignItems="center" fontSize="xs">
+                        <Text color={sourceColor} fontWeight="medium">
+                            {sourceName}
+                        </Text>
+                        <Text color={sourceColor}>
+                            {publishDate}
+                        </Text>
+                    </Flex>
+                </Box>
             </Box>
+
+            {/* Action Buttons */}
+            <Flex justifyContent="flex-end" p={4} borderTop="1px" borderColor="gray.200">
+                {!isSavedPage && onSave && (
+                    <>
+                        <Button
+                            size="sm"
+                            colorScheme="blue"
+                            onClick={handleSave}
+                            mr={2}
+                        >
+                            Save
+                        </Button>
+                        <Button
+                            size="sm"
+                            colorScheme="red"
+                            onClick={handleDelete}
+                        >
+                            Delete
+                        </Button>
+                    </>
+                )}
+                {isSavedPage && onUnsave && (
+                    <Button
+                        size="sm"
+                        colorScheme="red"
+                        onClick={handleUnsave}
+                    >
+                        Unsave
+                    </Button>
+                )}
+            </Flex>
         </MotionBox>
     );
 };

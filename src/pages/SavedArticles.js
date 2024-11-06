@@ -24,9 +24,7 @@ function SavedArticles() {
     const [articleToUnsave, setArticleToUnsave] = useState(null);
     const [selectedArticle, setSelectedArticle] = useState(null);
     const cancelRef = useRef();
-
     const [currentPage, setCurrentPage] = useState(1);
-    const articlesPerPage = 20;
 
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -38,9 +36,8 @@ function SavedArticles() {
     }, [dispatch]);
 
     useEffect(() => {
-        dispatch(fetchSavedArticles());
-    }, [dispatch]);
-
+        loadSavedArticles();
+    }, [loadSavedArticles]);
 
     const handleSearch = useCallback((query) => {
         if (!query.trim()) {
@@ -115,11 +112,6 @@ function SavedArticles() {
         window.scrollTo(0, 0);
     };
 
-    const indexOfLastArticle = currentPage * articlesPerPage;
-    const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
-    const currentArticles = savedArticles.slice(indexOfFirstArticle, indexOfLastArticle);
-    const totalPages = Math.ceil(savedArticles.length / articlesPerPage);
-
     if (loading && (!savedArticles || savedArticles.length === 0)) {
         return (
             <Box textAlign="center" py={10} bg={bgColor} minH="100vh">
@@ -165,34 +157,15 @@ function SavedArticles() {
                     )}
                     <Fade in={true}>
                         <ArticleGrid
-                            articles={savedArticles}
+                            onSave={null}
                             onUnsave={handleUnsave}
+                            onDelete={null}
                             onRead={handleReadArticle}
-                            loading={loading}
                             isSavedPage={true}
+                            currentPage={currentPage}
+                            onPageChange={handlePageChange}
                         />
                     </Fade>
-                    {savedArticles.length > articlesPerPage && (
-                        <Flex justifyContent="center" mt={4}>
-                            <Button
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                isDisabled={currentPage === 1}
-                                mr={2}
-                            >
-                                Previous
-                            </Button>
-                            <Text alignSelf="center" mx={2}>
-                                Page {currentPage} of {totalPages}
-                            </Text>
-                            <Button
-                                onClick={() => handlePageChange(currentPage + 1)}
-                                isDisabled={currentPage === totalPages}
-                                ml={2}
-                            >
-                                Next
-                            </Button>
-                        </Flex>
-                    )}
                 </VStack>
             </Container>
 

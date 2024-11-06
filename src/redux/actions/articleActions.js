@@ -20,26 +20,29 @@ export const fetchArticles = (page = 1) => async (dispatch) => {
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {
         const response = await api.getRecommendedArticles(page);
+        console.log('API response:', response);
+
         const deletedArticles = JSON.parse(localStorage.getItem('deletedArticles') || '[]');
-        const filteredArticles = response.recommendations.filter(article =>
-            !deletedArticles.includes(article._id)
+        const filteredArticles = response.recommendations.filter(
+            article => !deletedArticles.includes(article._id)
         );
+
         dispatch({
             type: FETCH_ARTICLES_SUCCESS,
             payload: {
                 articles: filteredArticles,
-                currentPage: page,
-                totalPages: response.totalPages,
+                currentPage: response.currentPage,
+                totalPages: response.totalPages // Make sure this is being passed
             }
         });
     } catch (error) {
+        console.error('Error fetching articles:', error);
         dispatch({
             type: FETCH_ARTICLES_FAILURE,
             payload: error.message || 'Failed to fetch articles'
         });
     }
 };
-
 export const searchArticlesAction = (query, page = 1, limit = 20) => async (dispatch) => {
     dispatch({ type: FETCH_ARTICLES_REQUEST });
     try {

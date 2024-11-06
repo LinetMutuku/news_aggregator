@@ -1,27 +1,33 @@
 import React, { memo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { SimpleGrid, Container, VStack, Text, Spinner, Center } from "@chakra-ui/react";
+import { SimpleGrid, Container, VStack, Text, Spinner, Center, Button, Flex } from "@chakra-ui/react";
 import ArticleCard from './ArticleCard';
 import { fetchArticles, fetchSavedArticles } from '../redux/actions/articleActions';
 
-const ArticleGrid = memo(({ onSave, onUnsave, onDelete, onRead, isSavedPage }) => {
+const ArticleGrid = memo(({
+                              onSave,
+                              onUnsave,
+                              onDelete,
+                              onRead,
+                              isSavedPage,
+                              currentPage,
+                              onPageChange
+                          }) => {
     const dispatch = useDispatch();
-    const { articles, savedArticles, loading } = useSelector(state => state.articles);
+    const { articles, savedArticles, loading, totalPages } = useSelector(state => state.articles);
 
     useEffect(() => {
         if (isSavedPage) {
             dispatch(fetchSavedArticles());
         } else {
-            dispatch(fetchArticles());
+            dispatch(fetchArticles(currentPage));
         }
-    }, [dispatch, isSavedPage]);
+    }, [dispatch, isSavedPage, currentPage]);
 
     const displayedArticles = isSavedPage ? savedArticles : articles;
-    console.log(`ArticleGrid rendered with ${displayedArticles.length} ${isSavedPage ? 'saved' : ''} articles`);
+    console.log(`ArticleGrid rendered with ${displayedArticles?.length || 0} ${isSavedPage ? 'saved' : ''} articles`);
 
-    const limitedArticles = displayedArticles.slice(0, 20); // Ensure only 20 articles are displayed
-
-    if (loading && limitedArticles.length === 0) {
+    if (loading) {
         return (
             <Center height="200px">
                 <Spinner size="xl" />
@@ -29,7 +35,7 @@ const ArticleGrid = memo(({ onSave, onUnsave, onDelete, onRead, isSavedPage }) =
         );
     }
 
-    if (!limitedArticles || limitedArticles.length === 0) {
+    if (!displayedArticles?.length) {
         return (
             <Container maxW="container.xl" py={16}>
                 <Text textAlign="center" fontSize="xl">
@@ -44,12 +50,12 @@ const ArticleGrid = memo(({ onSave, onUnsave, onDelete, onRead, isSavedPage }) =
     return (
         <Container maxW="container.xl" py={8}>
             <VStack spacing={8} align="stretch">
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={8}>
-                    {limitedArticles.map(article => (
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                    {displayedArticles.map(article => (
                         <ArticleCard
                             key={article._id}
                             article={article}
-                            onSave={isSavedPage ? null : onSave}
+                            onSave={!isSavedPage ? onSave : null}
                             onUnsave={isSavedPage ? onUnsave : null}
                             onDelete={onDelete}
                             onRead={onRead}
@@ -57,6 +63,28 @@ const ArticleGrid = memo(({ onSave, onUnsave, onDelete, onRead, isSavedPage }) =
                         />
                     ))}
                 </SimpleGrid>
+
+                {totalPages > 1 && (
+                    <Flex justifyContent="center" mt={4}>
+                        <Button
+                            onClick={() => onPageChange(currentPage - 1)}
+                            isDisabled={currentPage === 1}
+                            mr={2}
+                        >
+                            Previous
+                        </Button>
+                        <Text alignSelf="center" mx={2}>
+                            Page {currentPage} of {totalPages}
+                        </Text>
+                        <Button
+                            onClick={() => onPageChange(currentPage + 1)}
+                            isDisabled={currentPage === totalPages}
+                            ml={2}
+                        >
+                            Next
+                        </Button>
+                    </Flex>
+                )}
             </VStack>
         </Container>
     );
