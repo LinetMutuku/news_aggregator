@@ -1,35 +1,44 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-    Box, VStack, Heading, Text, useToast, Spinner, Image,
+    Box, VStack, Heading, Text, useToast, Spinner,
     Container, useColorModeValue, Fade, Input, InputGroup, InputLeftElement,
     Button, Alert, AlertIcon, Flex, AlertDialog, AlertDialogBody, AlertDialogFooter,
     AlertDialogHeader, AlertDialogContent, AlertDialogOverlay,
     Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton,
-    Link
+    Link, Image
 } from "@chakra-ui/react";
 import { SearchIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import ArticleGrid from '../components/ArticleGrid';
-import { fetchSavedArticles, unsaveArticleAction, searchSavedArticlesAction } from '../redux/actions/articleActions';
+import { fetchSavedArticles, unsaveArticleAction } from '../redux/actions/articleActions';
 import useDebounce from '../hooks/useDebounce';
+
+const ITEMS_PER_PAGE = 20;
 
 function SavedArticles() {
     const dispatch = useDispatch();
     const { savedArticles, loading, error } = useSelector(state => state.articles);
     const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [filteredArticles, setFilteredArticles] = useState([]);
     const toast = useToast();
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [isUnsaveDialogOpen, setIsUnsaveDialogOpen] = useState(false);
-    const [isReadModalOpen, setIsReadModalOpen] = useState(false);
     const [articleToUnsave, setArticleToUnsave] = useState(null);
     const [selectedArticle, setSelectedArticle] = useState(null);
     const cancelRef = useRef();
-    const [currentPage, setCurrentPage] = useState(1);
 
     const bgColor = useColorModeValue('gray.50', 'gray.900');
     const textColor = useColorModeValue('gray.800', 'gray.100');
     const headingColor = useColorModeValue('blue.600', 'blue.300');
     const inputBgColor = useColorModeValue('white', 'gray.700');
+
+    // Calculate pagination
+    const totalArticles = filteredArticles.length;
+    const totalPages = Math.ceil(totalArticles / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const currentArticles = filteredArticles.slice(startIndex, endIndex);
 
     const loadSavedArticles = useCallback(() => {
         dispatch(fetchSavedArticles());
@@ -39,78 +48,139 @@ function SavedArticles() {
         loadSavedArticles();
     }, [loadSavedArticles]);
 
-    const handleSearch = useCallback((query) => {
-        if (!query.trim()) {
-            loadSavedArticles();
-            return;
-        }
-        dispatch(searchSavedArticlesAction(query));
-    }, [dispatch, loadSavedArticles]);
-
+    // Filter articles based on search query
     useEffect(() => {
-        if (debouncedSearchQuery) {
-            handleSearch(debouncedSearchQuery);
-        } else if (debouncedSearchQuery === '') {
-            loadSavedArticles();
-        }
-    }, [debouncedSearchQuery, handleSearch, loadSavedArticles]);
+        if (!savedArticles) return;
+
+        const filtered = savedArticles.filter(article => {
+            if (!debouncedSearchQuery) return true;
+
+            const searchTerm = debouncedSearchQuery.toLowerCase();
+            return (
+                article.title?.toLowerCase().includes(searchTerm) ||
+                article.description?.toLowerCase().includes(searchTerm)
+            );
+        });
+
+        setFilteredArticles(filtered);
+        setCurrentPage(1); // Reset to first page when search changes
+    }, [debouncedSearchQuery, savedArticles]);
 
     const handleUnsave = useCallback((article) => {
         setArticleToUnsave(article);
         setIsUnsaveDialogOpen(true);
     }, []);
 
-    const confirmUnsave = () => {
+    const confirmUnsave = async () => {
         if (articleToUnsave) {
-            dispatch(unsaveArticleAction(articleToUnsave)).then((result) => {
-                if (result.success) {
-                    toast({
-                        title: "Article unsaved",
-                        description: result.message,
-                        status: "success",
-                        duration: 3000,
-                        isClosable: true,
-                    });
-                    loadSavedArticles();
-                }
-            }).catch((error) => {
+            try {
+                await dispatch(unsaveArticleAction(articleToUnsave));
+                toast({
+                    title: "Article unsaved",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                loadSavedArticles();
+            } catch (error) {
                 toast({
                     title: "Error unsaving article",
-                    description: error.message || "An unexpected error occurred. Please try again.",
+                    description: error.message || "An unexpected error occurred",
                     status: "error",
                     duration: 5000,
                     isClosable: true,
                 });
-            });
+            }
         }
         setIsUnsaveDialogOpen(false);
         setArticleToUnsave(null);
     };
 
-    const cancelUnsave = () => {
-        setIsUnsaveDialogOpen(false);
-        setArticleToUnsave(null);
-    };
+    const handlePageChange = useCallback((newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [totalPages]);
 
-    const handleReadArticle = useCallback((article) => {
-        setSelectedArticle(article);
-        setIsReadModalOpen(true);
+    const handleClearSearch = useCallback(() => {
+        setSearchQuery('');
     }, []);
 
-    const handleCloseReadModal = () => {
-        setIsReadModalOpen(false);
-        setSelectedArticle(null);
-    };
+    const renderPagination = useCallback(() => {
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    const handleClearSearch = () => {
-        setSearchQuery('');
-        loadSavedArticles();
-    };
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
 
-    const handlePageChange = (newPage) => {
-        setCurrentPage(newPage);
-        window.scrollTo(0, 0);
-    };
+        return (
+            <Flex justify="center" align="center" mt={6} mb={8}>
+                <Button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    isDisabled={currentPage === 1}
+                    size="sm"
+                    mr={2}
+                >
+                    Previous
+                </Button>
+
+                {startPage > 1 && (
+                    <>
+                        <Button
+                            onClick={() => handlePageChange(1)}
+                            size="sm"
+                            mx={1}
+                            colorScheme={currentPage === 1 ? "blue" : "gray"}
+                        >
+                            1
+                        </Button>
+                        {startPage > 2 && <Text mx={2}>...</Text>}
+                    </>
+                )}
+
+                {Array.from({ length: endPage - startPage + 1 }).map((_, idx) => {
+                    const pageNum = startPage + idx;
+                    return (
+                        <Button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            colorScheme={currentPage === pageNum ? "blue" : "gray"}
+                            size="sm"
+                            mx={1}
+                        >
+                            {pageNum}
+                        </Button>
+                    );
+                })}
+
+                {endPage < totalPages && (
+                    <>
+                        {endPage < totalPages - 1 && <Text mx={2}>...</Text>}
+                        <Button
+                            onClick={() => handlePageChange(totalPages)}
+                            size="sm"
+                            mx={1}
+                            colorScheme={currentPage === totalPages ? "blue" : "gray"}
+                        >
+                            {totalPages}
+                        </Button>
+                    </>
+                )}
+
+                <Button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    isDisabled={currentPage === totalPages}
+                    size="sm"
+                    ml={2}
+                >
+                    Next
+                </Button>
+            </Flex>
+        );
+    }, [currentPage, totalPages, handlePageChange]);
 
     if (loading && (!savedArticles || savedArticles.length === 0)) {
         return (
@@ -128,9 +198,11 @@ function SavedArticles() {
                     <Heading textAlign="center" fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} color={headingColor} fontWeight="bold">
                         Your Saved Articles
                     </Heading>
+
                     <Text textAlign="center" fontSize={{ base: "md", md: "lg" }} color={textColor}>
-                        Revisit and manage your curated collection of saved stories.
+                        {totalArticles} {totalArticles === 1 ? 'Article' : 'Articles'} Saved
                     </Text>
+
                     <Flex>
                         <InputGroup>
                             <InputLeftElement pointerEvents="none">
@@ -149,22 +221,24 @@ function SavedArticles() {
                             </Button>
                         )}
                     </Flex>
+
                     {error && (
                         <Alert status="error">
                             <AlertIcon />
                             {error}
                         </Alert>
                     )}
+
                     <Fade in={true}>
                         <ArticleGrid
+                            articles={currentArticles}
                             onSave={null}
                             onUnsave={handleUnsave}
                             onDelete={null}
-                            onRead={handleReadArticle}
+                            onRead={setSelectedArticle}
                             isSavedPage={true}
-                            currentPage={currentPage}
-                            onPageChange={handlePageChange}
                         />
+                        {totalPages > 1 && renderPagination()}
                     </Fade>
                 </VStack>
             </Container>
@@ -172,7 +246,7 @@ function SavedArticles() {
             <AlertDialog
                 isOpen={isUnsaveDialogOpen}
                 leastDestructiveRef={cancelRef}
-                onClose={cancelUnsave}
+                onClose={() => setIsUnsaveDialogOpen(false)}
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent>
@@ -185,7 +259,7 @@ function SavedArticles() {
                         </AlertDialogBody>
 
                         <AlertDialogFooter>
-                            <Button ref={cancelRef} onClick={cancelUnsave}>
+                            <Button ref={cancelRef} onClick={() => setIsUnsaveDialogOpen(false)}>
                                 Cancel
                             </Button>
                             <Button colorScheme="red" onClick={confirmUnsave} ml={3}>
@@ -196,7 +270,7 @@ function SavedArticles() {
                 </AlertDialogOverlay>
             </AlertDialog>
 
-            <Modal isOpen={isReadModalOpen} onClose={handleCloseReadModal} size="xl">
+            <Modal isOpen={!!selectedArticle} onClose={() => setSelectedArticle(null)} size="xl">
                 <ModalOverlay />
                 <ModalContent maxW="900px">
                     <ModalHeader>{selectedArticle?.title}</ModalHeader>
@@ -219,7 +293,7 @@ function SavedArticles() {
                         <Link href={selectedArticle?.url} isExternal mr={3}>
                             Read Original Article <ExternalLinkIcon mx="2px" />
                         </Link>
-                        <Button colorScheme="blue" onClick={handleCloseReadModal}>
+                        <Button colorScheme="blue" onClick={() => setSelectedArticle(null)}>
                             Close
                         </Button>
                     </ModalFooter>
