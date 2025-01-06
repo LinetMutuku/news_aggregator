@@ -80,7 +80,7 @@ const articleReducer = (state = initialState, action) => {
         case FETCH_SAVED_ARTICLES:
             return {
                 ...state,
-                savedArticles: action.payload || [],
+                savedArticles: action.payload,
                 loading: false,
                 error: null
             };

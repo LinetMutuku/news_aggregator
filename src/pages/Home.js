@@ -41,7 +41,7 @@ function Home() {
         const token = localStorage.getItem('token');
         console.log('Home useEffect - token:', token ? 'exists' : 'missing');
         if (!token) {
-            navigate('/login');
+            navigate('/');
         } else {
             console.log('Calling loadArticles with currentPage:', currentPage);
             loadArticles(currentPage);

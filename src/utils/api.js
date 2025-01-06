@@ -98,8 +98,16 @@ export const getUserPreferences = () => apiCall('get', '/users/preferences');
 export const updateUserPreferences = (preferences) => apiCall('put', '/users/preferences', preferences);
 
 // Saved Articles
-export const getSavedArticles = () => apiCall('get', '/users/saved-articles');
-
+export const getSavedArticles = async () => {
+    try {
+        const response = await apiCall('get', '/users/saved-articles');
+        console.log('Raw API response for saved articles:', response);
+        return response;
+    } catch (error) {
+        console.error('Error in getSavedArticles:', error);
+        throw error;
+    }
+};
 export const searchSavedArticles = (query) => apiCall('get', '/users/saved-articles/search', null, { query });
 
 export const saveArticle = async (article) => {

@@ -40,13 +40,15 @@ function SavedArticles() {
     const endIndex = startIndex + ITEMS_PER_PAGE;
     const currentArticles = filteredArticles.slice(startIndex, endIndex);
 
-    const loadSavedArticles = useCallback(() => {
-        dispatch(fetchSavedArticles());
-    }, [dispatch]);
 
     useEffect(() => {
-        loadSavedArticles();
-    }, [loadSavedArticles]);
+        // Only fetch if we don't have articles and aren't currently loading
+        if (!savedArticles?.length && !loading) {
+            dispatch(fetchSavedArticles());
+        }
+    }, [dispatch]); // Remove loadSavedArticles from dependencies
+
+
 
     // Filter articles based on search query
     useEffect(() => {
@@ -81,7 +83,7 @@ function SavedArticles() {
                     duration: 3000,
                     isClosable: true,
                 });
-                loadSavedArticles();
+
             } catch (error) {
                 toast({
                     title: "Error unsaving article",
